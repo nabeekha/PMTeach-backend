@@ -5,12 +5,12 @@ const createVideo = async (data) => {
   return await video.save();
 };
 
-const getVideosBySection = async (sectionId) => {
+const getVideos = async (sectionId) => {
   return await Video.find({ section: sectionId });
 };
 
 const getVideoById = async (id) => {
-  const video = await Video.findById(id);
+  const video = await Video.findById(id).populate("section").exec();
   if (!video) throw new Error("Video not found.");
   return video;
 };
@@ -28,7 +28,7 @@ const deleteVideo = async (id) => {
 
 module.exports = {
   createVideo,
-  getVideosBySection,
+  getVideos,
   getVideoById,
   updateVideo,
   deleteVideo,

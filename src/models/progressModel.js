@@ -4,7 +4,14 @@ const progressSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
-    videos_watched: [{ type: mongoose.Schema.Types.ObjectId, ref: "Video" }],
+    sections: [
+      {
+        sectionId: { type: mongoose.Schema.Types.ObjectId, ref: "Section" },
+        completedVideos: [
+          { type: mongoose.Schema.Types.ObjectId, ref: "Video" },
+        ],
+      },
+    ],
   },
   { timestamps: true }
 );

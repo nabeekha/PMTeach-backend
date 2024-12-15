@@ -23,7 +23,6 @@ const validateVideo = (data) => {
   const schema = Joi.object({
     title: Joi.string().required(),
     section: Joi.string().required(),
-    url: Joi.string().uri().required(),
   }).unknown();
 
   return schema.validate(data);

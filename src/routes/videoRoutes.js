@@ -1,7 +1,7 @@
 const express = require("express");
 const {
   createVideo,
-  getVideosBySection,
+  getVideos,
   getVideoById,
   updateVideo,
   deleteVideo,
@@ -14,7 +14,7 @@ const {
 const router = express.Router();
 
 router.post("/", authMiddleware, adminMiddleware, createVideo);
-router.get("/:sectionId", authMiddleware, getVideosBySection);
+router.get("/", authMiddleware, getVideos);
 router.get("/video/:id", authMiddleware, getVideoById);
 router.put("/:id", authMiddleware, adminMiddleware, updateVideo);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteVideo);

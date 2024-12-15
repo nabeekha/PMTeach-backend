@@ -1,15 +1,14 @@
 const express = require("express");
 const {
-  markVideoAsCompleted,
-  getProgressByUser,
-  getProgressByCourse,
+  getUserProgress,
+  updateProgress,
 } = require("../controllers/progressController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post("/", authMiddleware, markVideoAsCompleted);
-router.get("/user", authMiddleware, getProgressByUser);
-router.get("/course/:courseId", authMiddleware, getProgressByCourse);
+router.get("/:userId", authMiddleware, getUserProgress);
+
+router.post("/update", authMiddleware, updateProgress);
 
 module.exports = router;

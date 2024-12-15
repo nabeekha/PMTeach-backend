@@ -17,9 +17,17 @@ const createVideo = async (req, res, next) => {
   }
 };
 
-const getVideosBySection = async (req, res, next) => {
+const getVideos = async (req, res, next) => {
   try {
-    const videos = await videoService.getVideosBySection(req.params.sectionId);
+    const sectionId = req.query.sectionId;
+    if (!sectionId) {
+      return res.status(400).json({
+        success: false,
+        message: "Section ID is required.",
+      });
+    }
+
+    const videos = await videoService.getVideos(sectionId);
     res.status(200).json({
       success: true,
       message: "Videos retrieved successfully",
@@ -73,7 +81,7 @@ const deleteVideo = async (req, res, next) => {
 
 module.exports = {
   createVideo,
-  getVideosBySection,
+  getVideos,
   getVideoById,
   updateVideo,
   deleteVideo,
