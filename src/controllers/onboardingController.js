@@ -1,3 +1,4 @@
+const Progress = require("../models/progressModel");
 const User = require("../models/userModel");
 const onboardingService = require("../services/onboardingService");
 // Create or complete onboarding
@@ -14,11 +15,23 @@ exports.completeOnboarding = async (req, res) => {
         req.user.id,
         req.body
       );
-      res.status(201).json({
-        success: true,
-        message: "Onboarding completed successfully",
-        data: onboardingData,
-      });
+      if (onboardingData) {
+        const defaultProgress = new Progress({
+          user: req.user.id,
+          course: onboardingData.courseId,
+          sections: onboardingData.sectionIds.map((section) => ({
+            sectionId: section._id,
+            completedVideos: [],
+          })),
+        });
+        await defaultProgress.save();
+
+        res.status(201).json({
+          success: true,
+          message: "Onboarding completed successfully",
+          data: onboardingData,
+        });
+      }
     }
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
