@@ -5,7 +5,6 @@ const {
 
 const router = express.Router();
 
-// Route to get payment history for a specific user
-router.get("/:userId", getPaymentHistory);
+router.get("/", getPaymentHistory);
 
 module.exports = router;

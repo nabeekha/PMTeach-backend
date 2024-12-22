@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const onboardingService = require("../services/onboardingService");
+const Progress = require("../models/progressModel");
 // Create or complete onboarding
 exports.completeOnboarding = async (req, res) => {
   try {
@@ -14,6 +15,15 @@ exports.completeOnboarding = async (req, res) => {
         req.user.id,
         req.body
       );
+      const defaultProgress = new Progress({
+        user: req.user.id,
+        course: onboardingData.courseId,
+        sections: onboardingData.sectionIds.map((section) => ({
+          sectionId: section._id,
+          completedVideos: [],
+        })),
+      });
+      await defaultProgress.save();
       res.status(201).json({
         success: true,
         message: "Onboarding completed successfully",
@@ -27,19 +37,28 @@ exports.completeOnboarding = async (req, res) => {
 
 // Get onboarding data for a specific user
 exports.getOnboarding = async (req, res) => {
-  const { userId } = req.query;
+  const { userId, page, limit } = req.query;
+  const paginationData = { page: page, limit: limit };
+  const query = userId ? { userId: userId } : {};
   try {
-    const onboardingData = await onboardingService.getOnboarding(userId);
-    if (!onboardingData) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Onboarding data not found" });
-    }
-    res.status(200).json({
+    const onboardingData = await onboardingService.getOnboarding(
+      query,
+      paginationData.page || null,
+      paginationData.limit || null
+    );
+    let response = {
       success: true,
       message: "Onboarding data retrieved successfully",
-      data: onboardingData,
-    });
+      data: !page && !limit ? onboardingData : onboardingData.data,
+    };
+
+    if (onboardingData.total) {
+      response.totalItems = onboardingData.total;
+      response.pageNumber = Number(onboardingData.page);
+      response.totalPages = onboardingData.pages;
+    }
+
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

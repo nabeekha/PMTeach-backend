@@ -18,21 +18,31 @@ const createVideo = async (req, res, next) => {
 };
 
 const getVideos = async (req, res, next) => {
-  try {
-    const sectionId = req.query.sectionId;
-    if (!sectionId) {
-      return res.status(400).json({
-        success: false,
-        message: "Section ID is required.",
-      });
-    }
+  const { page, limit, sectionId } = req.query;
+  const paginationData = { page: page, limit: limit };
 
-    const videos = await videoService.getVideos(sectionId);
-    res.status(200).json({
+  try {
+    const query = sectionId ? { section: sectionId } : {};
+
+    const videos = await videoService.getVideos(
+      query,
+      paginationData.page || null,
+      paginationData.limit || null
+    );
+
+    let response = {
       success: true,
       message: "Videos retrieved successfully",
-      data: videos,
-    });
+      data: !page && !limit ? videos : videos.data,
+    };
+
+    if (videos.total) {
+      response.totalItems = videos.total;
+      response.pageNumber = Number(videos.page);
+      response.totalPages = videos.pages;
+    }
+
+    res.status(200).json(response);
   } catch (err) {
     next(err);
   }
