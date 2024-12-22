@@ -15,20 +15,30 @@ const createSection = async (req, res, next) => {
 
 const getSections = async (req, res, next) => {
   try {
-    const courseId = req.query.courseId;
-    if (!courseId) {
-      return res.status(400).json({
-        success: false,
-        message: "Course ID is required.",
-      });
-    }
+    const { courseId, page, limit } = req.query;
+    const paginationData = { page: page, limit: limit };
 
-    const sections = await sectionService.getSections(courseId);
-    res.status(200).json({
+    const query = courseId ? { course: courseId } : {};
+
+    const sections = await sectionService.getSections(
+      query,
+      paginationData.page || null,
+      paginationData.limit || null
+    );
+
+    let response = {
       success: true,
       message: "Sections retrieved successfully",
-      data: sections,
-    });
+      data: !page && !limit ? sections : sections.data,
+    };
+
+    if (sections.total) {
+      response.totalItems = sections.total;
+      response.pageNumber = Number(sections.page);
+      response.totalPages = sections.pages;
+    }
+
+    res.status(200).json(response);
   } catch (err) {
     next(err);
   }

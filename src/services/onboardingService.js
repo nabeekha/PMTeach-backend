@@ -1,5 +1,6 @@
 const Onboarding = require("../models/onboardingModel");
 const User = require("../models/userModel");
+const paginate = require("../utils/pagination");
 // Create or complete onboarding
 exports.createOnboarding = async (userId, onboardingData) => {
   const { courseId, sectionIds, careerGoalId, milestoneIds } = onboardingData;
@@ -17,19 +18,32 @@ exports.createOnboarding = async (userId, onboardingData) => {
   return await onboarding.save();
 };
 
-// Get onboarding data for a specific user
-exports.getOnboarding = async (userId) => {
-  let query = userId ? { userId } : {};
-  return await Onboarding.find(query)
-    .populate({
-      path: "sectionIds", // Populate sections
+// Get onboarding data for a specific user with pagination
+exports.getOnboarding = async (query, page, limit) => {
+  const paginationResult = await paginate(Onboarding, query, page, limit);
+  const paginationData =
+    !page && !limit ? paginationResult : paginationResult.data;
+  const onboardingData = await Onboarding.populate(paginationData, [
+    {
+      path: "sectionIds",
       populate: {
-        path: "videos", // Populate videos within each section
+        path: "videos",
       },
-    })
-    .populate("courseId") // Populate course
-    .populate("careerGoalId") // Populate career goal
-    .populate("milestoneIds"); // Populate milestones;
+    },
+    { path: "courseId" },
+    { path: "careerGoalId" },
+    { path: "milestoneIds" },
+  ]);
+  if (!page && !limit) {
+    return onboardingData;
+  } else {
+    return {
+      total: paginationResult.total,
+      page: paginationResult.page,
+      pages: paginationResult.pages,
+      data: onboardingData,
+    };
+  }
 };
 
 // Update onboarding data for a specific user
