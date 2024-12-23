@@ -47,10 +47,9 @@ exports.getOnboarding = async (query, page, limit) => {
 };
 
 // Update onboarding data for a specific user
-exports.updateOnboarding = async (userId, updatedData) => {
-  return await Onboarding.findOneAndUpdate({ userId }, updatedData, {
+exports.updateOnboarding = async (id, updatedData) => {
+  return await Onboarding.findByIdAndUpdate(id, updatedData, {
     new: true,
-    runValidators: true,
   });
 };
 
