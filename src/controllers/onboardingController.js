@@ -65,20 +65,49 @@ exports.getOnboarding = async (req, res) => {
 };
 
 // Update onboarding data
+// Update onboarding data
 exports.updateOnboarding = async (req, res) => {
   try {
+    // Update the onboarding data
     const onboardingData = await onboardingService.updateOnboarding(
-      req.user.id,
+      req.params.id,
       req.body
     );
+
+    // If onboarding data is not found
     if (!onboardingData) {
       return res
         .status(404)
         .json({ success: false, message: "Onboarding data not found" });
     }
+    console.log("onboardingData::: ", onboardingData);
+    console.log("req.user.id::: ", req.user.id);
+    // Fetch the existing progress data for this user and course
+    const progressData = await Progress.findOne({
+      user: req.user.id,
+    });
+    console.log("progressData::: ", progressData);
+    // If progress data is not found, return a response indicating so
+    if (!progressData) {
+      return res.status(404).json({
+        success: false,
+        message: "Progress data not found for this user and course",
+      });
+    }
+    progressData.user = req.user.id;
+    progressData.course = onboardingData.courseId;
+    // Update progress data by resetting the completed videos for each section
+    progressData.sections = onboardingData.sectionIds.map((section) => ({
+      sectionId: section._id,
+      completedVideos: [], // Reset completed videos to empty
+    }));
+
+    // Save the updated progress data
+    await progressData.save();
+
     res.status(200).json({
       success: true,
-      message: "Onboarding data updated successfully",
+      message: "Onboarding data and progress updated successfully",
       data: onboardingData,
     });
   } catch (error) {
