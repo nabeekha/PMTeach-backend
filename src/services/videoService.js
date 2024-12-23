@@ -1,12 +1,13 @@
 const Video = require("../models/videoModel");
+const paginate = require("../utils/pagination");
 
 const createVideo = async (data) => {
   const video = new Video(data);
   return await video.save();
 };
 
-const getVideos = async (sectionId) => {
-  return await Video.find({ section: sectionId });
+const getVideos = async (query, page, limit) => {
+  return await paginate(Video, query, page, limit);
 };
 
 const getVideoById = async (id) => {

@@ -1,5 +1,5 @@
 const PaymentHistory = require("../models/PaymentHistory");
-
+const paymentHistoryService = require("../services/paymentHistoryService");
 // Save payment to history
 exports.addPaymentHistory = async (paymentData) => {
   try {
@@ -10,21 +10,34 @@ exports.addPaymentHistory = async (paymentData) => {
   }
 };
 
-// Get payment history for a user
 exports.getPaymentHistory = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { page, limit } = req.query;
 
-    // Fetch payment history for the user
-    const history = await PaymentHistory.find({ userId }).sort({
-      createdAt: -1,
-    });
+    const paginationData = { page: page, limit: limit };
 
-    res.status(200).json({
+    const query = userId ? { userId } : {};
+
+    const history = await paymentHistoryService.getPaymentHistory(
+      query,
+      paginationData.page,
+      paginationData.limit
+    );
+
+    let response = {
       success: true,
       message: "Payment history retrieved successfully",
-      data: history,
-    });
+      data: !page && !limit ? history : history.data,
+    };
+
+    if (history.total) {
+      response.totalItems = history.total;
+      response.pageNumber = history.page;
+      response.totalPages = history.pages;
+    }
+
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching payment history:", error.message);
     res.status(500).json({

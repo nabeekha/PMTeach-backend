@@ -19,7 +19,7 @@ router.post("/", authMiddleware, completeOnboarding);
 router.get("/", authMiddleware, getOnboarding);
 
 // Update onboarding data (PUT)
-router.put("/", authMiddleware, adminMiddleware, updateOnboarding);
+router.put("/:id", authMiddleware, updateOnboarding);
 
 // Delete onboarding data (DELETE)
 router.delete("/:id", authMiddleware, adminMiddleware, deleteOnboarding);

@@ -40,15 +40,27 @@ const login = async (req, res, next) => {
   }
 };
 
-// Get all users
 const getAllUsers = async (req, res, next) => {
+  const { page, limit } = req.query;
+  const paginationData = { page: page, limit: limit };
+
   try {
-    const users = await userService.getAllUsers();
-    res.status(200).json({
+    const users = await userService.getAllUsers(
+      {},
+      paginationData.page || null,
+      paginationData.limit || null
+    );
+    let response = {
       success: true,
       message: "Users retrieved successfully",
-      data: users,
-    });
+      data: !page && !limit ? users : users.data,
+    };
+    if (users.total) {
+      response.totalItems = users.total;
+      response.pageNumber = Number(users.page);
+      response.totalPages = users.pages;
+    }
+    res.status(200).json(response);
   } catch (err) {
     next(err);
   }

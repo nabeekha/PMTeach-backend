@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const paginate = require("../utils/pagination");
 
 // Register a new user
 const register = async ({ name, email, password, loginType }) => {
@@ -50,8 +51,8 @@ const login = async ({ email, password, loginType }) => {
 };
 
 // Get all users
-const getAllUsers = async () => {
-  return await User.find({});
+const getAllUsers = async (query, page, limit) => {
+  return await paginate(User, query, page, limit);
 };
 
 // Get user by ID

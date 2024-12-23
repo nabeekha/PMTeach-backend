@@ -1,12 +1,13 @@
 const Section = require("../models/sectionModel");
+const paginate = require("../utils/pagination");
 
 const createSection = async (data) => {
   const section = new Section(data);
   return await section.save();
 };
 
-const getSections = async (courseId) => {
-  return await Section.find({ course: courseId });
+const getSections = async (query, page, limit) => {
+  return await paginate(Section, query, page, limit);
 };
 
 const updateSection = async (id, data) => {
