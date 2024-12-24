@@ -1,7 +1,6 @@
 const Progress = require("../models/progressModel");
 const User = require("../models/userModel");
 const onboardingService = require("../services/onboardingService");
-const Progress = require("../models/progressModel");
 // Create or complete onboarding
 exports.completeOnboarding = async (req, res) => {
   try {
