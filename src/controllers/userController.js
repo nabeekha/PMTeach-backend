@@ -41,12 +41,22 @@ const login = async (req, res, next) => {
 };
 
 const getAllUsers = async (req, res, next) => {
-  const { page, limit } = req.query;
+  const { page, limit, search, ...filters } = req.query;
   const paginationData = { page: page, limit: limit };
 
   try {
+    const query = {};
+    for (const key in filters) {
+      query[key] = filters[key];
+    }
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
     const users = await userService.getAllUsers(
-      {},
+      query,
       paginationData.page || null,
       paginationData.limit || null
     );
