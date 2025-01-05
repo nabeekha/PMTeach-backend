@@ -7,7 +7,22 @@ const createSection = async (data) => {
 };
 
 const getSections = async (query, page, limit) => {
-  return await paginate(Section, query, page, limit);
+  const paginationResult = await paginate(Section, query, page, limit);
+  const paginationData =
+    !page && !limit ? paginationResult : paginationResult.data;
+  const sectionData = await Section.populate(paginationData, [
+    { path: "course" },
+  ]);
+  if (!page && !limit) {
+    return sectionData;
+  } else {
+    return {
+      total: paginationResult.total,
+      page: paginationResult.page,
+      pages: paginationResult.pages,
+      data: sectionData,
+    };
+  }
 };
 
 const updateSection = async (id, data) => {
@@ -17,8 +32,7 @@ const updateSection = async (id, data) => {
 };
 
 const deleteSection = async (id) => {
-  const section = await Section.findByIdAndDelete(id);
-  if (!section) throw new Error("Section not found.");
+  return await Section.findByIdAndDelete(id);
 };
 
 module.exports = {

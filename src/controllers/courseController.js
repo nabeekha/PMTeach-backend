@@ -18,13 +18,36 @@ const createCourse = async (req, res, next) => {
 };
 
 const getAllCourses = async (req, res, next) => {
+  const { page, limit, search, ...filters } = req.query;
+  const paginationData = { page: page, limit: limit };
+
   try {
-    const courses = await courseService.getAllCourses();
-    res.status(200).json({
+    const query = {};
+    for (const key in filters) {
+      query[key] = filters[key];
+    }
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+    const courses = await courseService.getAllCourses(
+      query,
+      paginationData.page || null,
+      paginationData.limit || null
+    );
+    let response = {
       success: true,
       message: "Courses retrieved successfully",
-      data: courses,
-    });
+      data: !page && !limit ? courses : courses.data,
+    };
+    if (courses.total) {
+      response.totalItems = courses.total;
+      response.pageNumber = Number(courses.page);
+      response.totalPages = courses.pages;
+    }
+    res.status(200).json(response);
   } catch (err) {
     next(err);
   }

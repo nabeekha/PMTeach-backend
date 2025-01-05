@@ -1,12 +1,13 @@
 const Course = require("../models/courseModel");
+const paginate = require("../utils/pagination");
 
 const createCourse = async (data) => {
   const course = new Course(data);
   return await course.save();
 };
 
-const getAllCourses = async () => {
-  return await Course.find({});
+const getAllCourses = async (query, page, limit) => {
+  return await paginate(Course, query, page, limit);
 };
 
 const getCourseById = async (id) => {
@@ -22,8 +23,7 @@ const updateCourse = async (id, data) => {
 };
 
 const deleteCourse = async (id) => {
-  const course = await Course.findByIdAndDelete(id);
-  if (!course) throw new Error("Course not found.");
+  return await Course.findByIdAndDelete(id);
 };
 
 module.exports = {
