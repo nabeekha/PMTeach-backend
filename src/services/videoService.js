@@ -7,7 +7,27 @@ const createVideo = async (data) => {
 };
 
 const getVideos = async (query, page, limit) => {
-  return await paginate(Video, query, page, limit);
+  const paginationResult = await paginate(Video, query, page, limit);
+  const paginationData =
+    !page && !limit ? paginationResult : paginationResult.data;
+  const videoData = await Video.populate(paginationData, [
+    {
+      path: "section",
+      populate: {
+        path: "course",
+      },
+    },
+  ]);
+  if (!page && !limit) {
+    return videoData;
+  } else {
+    return {
+      total: paginationResult.total,
+      page: paginationResult.page,
+      pages: paginationResult.pages,
+      data: videoData,
+    };
+  }
 };
 
 const getVideoById = async (id) => {
@@ -23,8 +43,7 @@ const updateVideo = async (id, data) => {
 };
 
 const deleteVideo = async (id) => {
-  const video = await Video.findByIdAndDelete(id);
-  if (!video) throw new Error("Video not found.");
+  return await Video.findByIdAndDelete(id);
 };
 
 module.exports = {

@@ -12,8 +12,8 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const paymentHistoryRoutes = require("./routes/paymentHistoryRoutes");
 const stripeWebhookRoutes = require("./routes/stripeWebhookRoutes");
 const careerGoalRoutes = require("./routes/careerGoalRoutes");
-const milestoneRoutes = require("./routes/milestoneRoutes");
 const onboardingRoutes = require("./routes/onboardingRoutes");
+const adminDashboardRoute = require("./routes/adminDashboardRoute");
 const { json } = require("express");
 const session = require("express-session");
 const passport = require("passport");
@@ -52,8 +52,8 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/payment-history", paymentHistoryRoutes);
 app.use("/api/stripe", stripeWebhookRoutes);
 app.use("/api/career-goals", careerGoalRoutes);
-app.use("/api/milestones", milestoneRoutes);
 app.use("/api/onboarding", onboardingRoutes);
+app.use("/api/admin-dashboard", adminDashboardRoute);
 
 // Redirect route after login success
 app.get("/dashboard", (req, res) => {

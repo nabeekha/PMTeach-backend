@@ -1,7 +1,8 @@
 const CareerGoal = require("../models/careerGoalModel");
+const paginate = require("../utils/pagination");
 
-exports.getCareerGoals = async () => {
-  return await CareerGoal.find();
+exports.getCareerGoals = async (query, page, limit) => {
+  return await paginate(CareerGoal, query, page, limit);
 };
 
 exports.getCareerGoalById = async (id) => {

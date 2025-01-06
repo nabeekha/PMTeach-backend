@@ -1,5 +1,6 @@
 const videoService = require("../services/videoService");
 const { validateVideo } = require("../utils/validation");
+const Section = require("../models/sectionModel");
 
 const createVideo = async (req, res, next) => {
   const { error } = validateVideo(req.body);
@@ -18,12 +19,27 @@ const createVideo = async (req, res, next) => {
 };
 
 const getVideos = async (req, res, next) => {
-  const { page, limit, sectionId } = req.query;
+  const { page, limit, search, course, ...filters } = req.query;
   const paginationData = { page: page, limit: limit };
 
   try {
-    const query = sectionId ? { section: sectionId } : {};
+    const query = {};
+    if (course) {
+      const sections = await Section.find({ course }).select("_id");
+      const sectionIds = sections.map((s) => s._id);
 
+      query.section = { $in: sectionIds };
+    }
+    for (const key in filters) {
+      query[key] = filters[key];
+    }
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
     const videos = await videoService.getVideos(
       query,
       paginationData.page || null,
@@ -79,8 +95,13 @@ const updateVideo = async (req, res, next) => {
 
 const deleteVideo = async (req, res, next) => {
   try {
-    await videoService.deleteVideo(req.params.id);
-    res.status(204).json({
+    const deleted = await videoService.deleteVideo(req.params.id);
+    if (!deleted) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Video not found" });
+    }
+    res.status(200).json({
       success: true,
       message: "Video deleted successfully",
     });

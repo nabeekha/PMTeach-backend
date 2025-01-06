@@ -1,7 +1,7 @@
 const Progress = require("../models/progressModel");
 const User = require("../models/userModel");
 const onboardingService = require("../services/onboardingService");
-// Create or complete onboarding
+
 exports.completeOnboarding = async (req, res) => {
   try {
     const alreadyOnboarded = await User.findById(req.user.id);
@@ -35,12 +35,20 @@ exports.completeOnboarding = async (req, res) => {
   }
 };
 
-// Get onboarding data for a specific user
-exports.getOnboarding = async (req, res) => {
-  const { userId, page, limit } = req.query;
+exports.getOnboarding = async (req, res, next) => {
+  const { page, limit, search, ...filters } = req.query;
   const paginationData = { page: page, limit: limit };
-  const query = userId ? { userId: userId } : {};
   try {
+    const query = {};
+    for (const key in filters) {
+      query[key] = filters[key];
+    }
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
     const onboardingData = await onboardingService.getOnboarding(
       query,
       paginationData.page || null,
@@ -59,35 +67,26 @@ exports.getOnboarding = async (req, res) => {
     }
 
     res.status(200).json(response);
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+  } catch (err) {
+    next(err);
   }
 };
 
-// Update onboarding data
-// Update onboarding data
 exports.updateOnboarding = async (req, res) => {
   try {
-    // Update the onboarding data
     const onboardingData = await onboardingService.updateOnboarding(
       req.params.id,
       req.body
     );
 
-    // If onboarding data is not found
     if (!onboardingData) {
       return res
         .status(404)
         .json({ success: false, message: "Onboarding data not found" });
     }
-    console.log("onboardingData::: ", onboardingData);
-    console.log("req.user.id::: ", req.user.id);
-    // Fetch the existing progress data for this user and course
     const progressData = await Progress.findOne({
       user: req.user.id,
     });
-    console.log("progressData::: ", progressData);
-    // If progress data is not found, return a response indicating so
     if (!progressData) {
       return res.status(404).json({
         success: false,
@@ -96,13 +95,11 @@ exports.updateOnboarding = async (req, res) => {
     }
     progressData.user = req.user.id;
     progressData.course = onboardingData.courseId;
-    // Update progress data by resetting the completed videos for each section
     progressData.sections = onboardingData.sectionIds.map((section) => ({
       sectionId: section._id,
-      completedVideos: [], // Reset completed videos to empty
+      completedVideos: [],
     }));
 
-    // Save the updated progress data
     await progressData.save();
 
     res.status(200).json({
@@ -115,7 +112,6 @@ exports.updateOnboarding = async (req, res) => {
   }
 };
 
-// Delete onboarding data
 exports.deleteOnboarding = async (req, res) => {
   const { id } = req.params;
   try {

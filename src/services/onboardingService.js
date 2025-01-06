@@ -3,14 +3,13 @@ const User = require("../models/userModel");
 const paginate = require("../utils/pagination");
 // Create or complete onboarding
 exports.createOnboarding = async (userId, onboardingData) => {
-  const { courseId, sectionIds, careerGoalId, milestoneIds } = onboardingData;
+  const { courseId, sectionIds, careerGoalId } = onboardingData;
 
   const onboarding = new Onboarding({
     userId,
     courseId,
     sectionIds,
     careerGoalId,
-    milestoneIds,
   });
 
   await User.findByIdAndUpdate(userId, { isOnboarded: true });
@@ -31,8 +30,8 @@ exports.getOnboarding = async (query, page, limit) => {
       },
     },
     { path: "courseId" },
+    { path: "userId" },
     { path: "careerGoalId" },
-    { path: "milestoneIds" },
   ]);
   if (!page && !limit) {
     return onboardingData;

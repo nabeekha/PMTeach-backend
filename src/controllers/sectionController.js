@@ -14,12 +14,19 @@ const createSection = async (req, res, next) => {
 };
 
 const getSections = async (req, res, next) => {
+  const { page, limit, search, ...filters } = req.query;
+  const paginationData = { page: page, limit: limit };
   try {
-    const { courseId, page, limit } = req.query;
-    const paginationData = { page: page, limit: limit };
-
-    const query = courseId ? { course: courseId } : {};
-
+    const query = {};
+    for (const key in filters) {
+      query[key] = filters[key];
+    }
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
     const sections = await sectionService.getSections(
       query,
       paginationData.page || null,
@@ -62,8 +69,13 @@ const updateSection = async (req, res, next) => {
 
 const deleteSection = async (req, res, next) => {
   try {
-    await sectionService.deleteSection(req.params.id);
-    res.status(204).json({
+    const deleted = await sectionService.deleteSection(req.params.id);
+    if (!deleted) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Section not found" });
+    }
+    res.status(200).json({
       success: true,
       message: "Section deleted successfully",
     });
