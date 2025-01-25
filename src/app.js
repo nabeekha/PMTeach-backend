@@ -4,30 +4,30 @@ const cors = require("cors");
 const logger = require("./utils/logger");
 const { errorHandler } = require("./middleware/errorHandler");
 const database = require("../config/database");
-const userRoutes = require("./routes/userRoutes");
-const courseRoutes = require("./routes/courseRoutes");
-const sectionRoutes = require("./routes/sectionRoutes");
-const videoRoutes = require("./routes/videoRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
-const paymentHistoryRoutes = require("./routes/paymentHistoryRoutes");
-const stripeWebhookRoutes = require("./routes/stripeWebhookRoutes");
-const careerGoalRoutes = require("./routes/careerGoalRoutes");
-const onboardingRoutes = require("./routes/onboardingRoutes");
-const adminDashboardRoute = require("./routes/adminDashboardRoute");
-const quizRoute = require("./routes/quizRoute");
-const quizHistoryRoute = require("./routes/quizHistoryRoute");
+const userRoutes = require("./modules/users/user.routes");
+const courseRoutes = require("./modules/courses/course.routes");
+const sectionRoutes = require("./modules/sections/section.routes");
+const videoRoutes = require("./modules/videos/video.routes");
+const paymentRoutes = require("./common/routes/payment.routes");
+const paymentHistoryRoutes = require("./modules/payment-histories/paymentHistory.routes");
+const stripeWebhookRoutes = require("./common/routes/stripeWebhook.routes");
+const careerGoalRoutes = require("./modules/career-goals/careerGoal.routes");
+const onboardingRoutes = require("./modules/onboardings/onboarding.routes");
+const adminDashboardRoute = require("./common/routes/adminDashboard.routes");
+const quizRoute = require("./modules/quizzes/quiz.routes");
+const quizHistoryRoute = require("./modules/quiz-histories/quizHistory.routes");
 const { json } = require("express");
 const session = require("express-session");
 const passport = require("passport");
-const progressRoutes = require("./routes/progressRoutes");
-const googleAuthRoutes = require("./routes/googleAuthRoutes");
+const progressRoutes = require("./modules/progress/progress.routes");
+const googleAuthRoutes = require("./common/routes/googleAuth.routes");
 
 const app = express();
 
 // Session configuration
 app.use(
   session({
-    secret: "your-secret-key",
+    secret: "key",
     resave: false,
     saveUninitialized: true,
   })
