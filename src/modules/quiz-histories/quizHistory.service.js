@@ -3,13 +3,12 @@ const QuizHistory = require("./quizHistory.model");
 const paginate = require("../../utils/pagination");
 
 const submitQuiz = async (userId, quizId, courseId, sectionId, answers) => {
-  // Fetch the quiz
   const quiz = await Quiz.findById(quizId);
   if (!quiz) throw new Error("Quiz not found");
 
   let correctAnswers = 0;
   let incorrectAnswers = 0;
-  // Calculate score
+
   const results = quiz.questions.map((question, index) => {
     const selectedAnswer = answers.find(
       (a) => a.questionId === question._id.toString()
@@ -20,11 +19,11 @@ const submitQuiz = async (userId, quizId, courseId, sectionId, answers) => {
       incorrectAnswers++;
     }
     return {
-      questionId: question._id, // Store the ObjectId of the question
+      questionId: question._id,
       selectedAnswer: selectedAnswer?.selectedAnswer,
     };
   });
-  // Save history
+
   const totalScore = correctAnswers;
   const history = new QuizHistory({
     userId,
@@ -47,7 +46,8 @@ const getAllHistories = async (query, page, limit) => {
   const quizHistoryData = await QuizHistory.populate(paginationData, [
     { path: "quizId" },
     { path: "userId" },
-    { path: "courseId" },
+    { path: "sectionId", select: "title" },
+    { path: "courseId", select: "title" },
   ]);
   if (!page && !limit) {
     return quizHistoryData;

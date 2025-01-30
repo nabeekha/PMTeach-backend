@@ -15,9 +15,9 @@ const createQuiz = async (req, res, next) => {
 };
 
 // Get Quiz by Course
-const getQuizByCourse = async (req, res, next) => {
+const getQuizByCourseAndSection = async (req, res, next) => {
   try {
-    const quiz = await quizService.getQuizByCourse(
+    const quiz = await quizService.getQuizByCourseAndSection(
       req.params.courseId,
       req.params.sectionId
     );
@@ -117,7 +117,7 @@ const deleteQuiz = async (req, res, next) => {
 
 module.exports = {
   createQuiz,
-  getQuizByCourse,
+  getQuizByCourseAndSection,
   getAllQuizzes,
   updateQuiz,
   deleteQuiz,

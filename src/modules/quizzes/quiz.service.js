@@ -2,16 +2,16 @@ const Quiz = require("./quiz.model");
 const paginate = require("../../utils/pagination");
 
 const createQuiz = async (data) => {
-  const { courseId } = data;
-  const existingQuiz = await Quiz.findOne({ courseId });
+  const { courseId, sectionId } = data;
+  const existingQuiz = await Quiz.findOne({ courseId, sectionId });
   if (existingQuiz) {
-    throw new Error("A quiz already exists for this course.");
+    throw new Error("A quiz already exists for this course and sections.");
   }
   const quiz = new Quiz(data);
   return await quiz.save();
 };
 
-const getQuizByCourse = async (courseId, sectionId) => {
+const getQuizByCourseAndSection = async (courseId, sectionId) => {
   return await Quiz.findOne({ courseId, sectionId }).select("-__v");
 };
 
@@ -49,7 +49,7 @@ const deleteQuiz = async (id) => {
 
 module.exports = {
   createQuiz,
-  getQuizByCourse,
+  getQuizByCourseAndSection,
   getAllQuizzes,
   updateQuiz,
   deleteQuiz,

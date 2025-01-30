@@ -6,13 +6,11 @@ const quizSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
       required: true,
-      unique: true,
     },
     sectionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Section",
       required: true,
-      unique: true,
     },
     quizTitle: { type: String, required: true },
     questions: [

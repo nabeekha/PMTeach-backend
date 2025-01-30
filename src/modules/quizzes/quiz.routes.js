@@ -1,7 +1,7 @@
 const express = require("express");
 const {
   createQuiz,
-  getQuizByCourse,
+  getQuizByCourseAndSection,
   getAllQuizzes,
   updateQuiz,
   deleteQuiz,
@@ -14,7 +14,7 @@ const {
 const router = express.Router();
 
 router.post("/", authMiddleware, adminMiddleware, createQuiz);
-router.get("/:courseId/:sectionId", authMiddleware, getQuizByCourse);
+router.get("/:courseId/:sectionId", authMiddleware, getQuizByCourseAndSection);
 router.get("/", authMiddleware, adminMiddleware, getAllQuizzes);
 router.put("/:id", authMiddleware, adminMiddleware, updateQuiz);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteQuiz);
