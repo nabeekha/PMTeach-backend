@@ -6,7 +6,14 @@ const videoSchema = new mongoose.Schema(
     title: String,
     url: String,
     description: { type: String },
+    notes: [
+      {
+        title: { type: String },
+        url: { type: String },
+      },
+    ],
   },
+
   { timestamps: true }
 );
 

@@ -7,7 +7,20 @@ const createVideo = async (req, res, next) => {
   if (error) return res.status(400).json({ message: error.details[0].message });
 
   try {
-    const video = await videoService.createVideo(req.body);
+    const { notes = [], ...videoData } = req.body;
+
+    // Validate notes only if provided
+    if (notes.length > 0) {
+      for (const note of notes) {
+        if (!note.title || !note.url) {
+          return res
+            .status(400)
+            .json({ message: "Each note must have a title and a URL." });
+        }
+      }
+    }
+
+    const video = await videoService.createVideo({ ...videoData, notes });
     res.status(201).json({
       success: true,
       message: "Video created successfully",
@@ -79,10 +92,22 @@ const getVideoById = async (req, res, next) => {
 
 const updateVideo = async (req, res, next) => {
   try {
-    const updatedVideo = await videoService.updateVideo(
-      req.params.id,
-      req.body
-    );
+    const { notes = [], ...updateData } = req.body;
+
+    if (notes.length > 0) {
+      for (const note of notes) {
+        if (!note.title || !note.url) {
+          return res
+            .status(400)
+            .json({ message: "Each note must have a title and a URL." });
+        }
+      }
+    }
+
+    const updatedVideo = await videoService.updateVideo(req.params.id, {
+      ...updateData,
+      notes,
+    });
     res.status(200).json({
       success: true,
       message: "Video updated successfully",
