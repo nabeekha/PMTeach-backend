@@ -5,6 +5,7 @@ const {
   getOnboarding,
   updateOnboarding,
   deleteOnboarding,
+  attachUserOnboarding,
 } = require("./onboarding.controller");
 const {
   authMiddleware,
@@ -12,13 +13,15 @@ const {
 } = require("../../middleware/authMiddleware");
 
 // Create or complete onboarding (POST)
-router.post("/", authMiddleware, completeOnboarding);
+router.post("/", completeOnboarding);
 
 // Get onboarding data (GET)
 router.get("/", authMiddleware, getOnboarding);
 
 // Update onboarding data (PUT)
 router.put("/:id", authMiddleware, updateOnboarding);
+
+router.put("/attach-user/:id", authMiddleware, attachUserOnboarding);
 
 // Delete onboarding data (DELETE)
 router.delete("/:id", authMiddleware, adminMiddleware, deleteOnboarding);

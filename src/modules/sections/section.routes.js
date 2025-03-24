@@ -13,7 +13,7 @@ const {
 const router = express.Router();
 
 router.post("/", authMiddleware, adminMiddleware, createSection);
-router.get("/", authMiddleware, getSections);
+router.get("/", getSections);
 router.put("/:id", authMiddleware, adminMiddleware, updateSection);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteSection);
 

@@ -13,7 +13,7 @@ const {
 } = require("../../middleware/authMiddleware");
 
 // Get all career goals
-router.get("/", authMiddleware, getCareerGoals);
+router.get("/", getCareerGoals);
 
 // Get a single career goal by ID
 router.get("/:id", authMiddleware, getCareerGoalById);
