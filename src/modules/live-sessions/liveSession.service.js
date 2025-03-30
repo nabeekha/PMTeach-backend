@@ -1,6 +1,8 @@
 const LiveSession = require("./liveSession.model");
 const paginate = require("../../utils/pagination");
 const mailgun = require("mailgun-js");
+// const { google } = require("googleapis");
+// const { OAuth2 } = google.auth;
 
 const DOMAIN = process.env.MAILGUN_DOMAIN;
 const mg = mailgun({
@@ -35,15 +37,28 @@ const deleteLiveSession = async (id) => {
   return await LiveSession.findByIdAndDelete(id);
 };
 
-const registerUserForSession = async (sessionId, email, userId) => {
-  const session = await LiveSession.findById(sessionId);
-  if (!session) throw new Error("Session not found");
-  if (session.registeredUsers.includes(userId))
-    throw new Error("User already registered");
-  session.registeredUsers.push(userId);
-  await session.save();
-  sendMeetingLink(email, session);
-  return session;
+const registerUserForSessions = async (sessionIds, email, userId) => {
+  if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
+    throw new Error("No sessions provided for registration.");
+  }
+  const sessions = await LiveSession.find({ _id: { $in: sessionIds } });
+  if (!sessions.length) {
+    throw new Error("No valid sessions found.");
+  }
+  const unregisteredSessions = sessions.filter(
+    (session) => !session.registeredUsers.includes(userId)
+  );
+  if (unregisteredSessions.length === 0) {
+    throw new Error("You are already registered for all selected sessions.");
+  }
+  const sessionUpdates = unregisteredSessions.map(async (session) => {
+    session.registeredUsers.push(userId);
+    await session.save();
+    sendMeetingLink(email, session);
+    return session;
+  });
+  const registeredSessions = await Promise.all(sessionUpdates);
+  return registeredSessions;
 };
 
 const sendMeetingLink = (email, session) => {
@@ -68,10 +83,11 @@ const sendMeetingLink = (email, session) => {
             month: "short",
             year: "numeric",
             weekday: "long",
-          })} ${new Date(session.startTime).toLocaleTimeString("en-US", {
+          })} ${new Date(
+      `1970-01-01T${session?.startTime}:00`
+    ).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true,
     })}</p>
           <p><strong>⏳ Duration:</strong> ${session.duration}</p>
           <p><strong>🎙 Speaker:</strong> ${session.speaker}</p>
@@ -89,7 +105,7 @@ const sendMeetingLink = (email, session) => {
       session.duration
     )}&details=${encodeURIComponent(
       session.description
-    )}&location=${encodeURIComponent(session.meetLink)}" 
+    )}&location=${encodeURIComponent(session.meetLink)}"
           target="_blank" style="background-color: #28a745; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-size: 16px;">
             ➕ Add to Google Calendar
           </a>
@@ -109,6 +125,101 @@ const sendMeetingLink = (email, session) => {
     else console.log("Mail Sent:", body);
   });
 };
+
+// const sendMeetingLink = async (email, session, token) => {
+//   const oAuth2Client = new OAuth2(
+//     process.env.GOOGLE_CLIENT_ID,
+//     process.env.GOOGLE_CLIENT_SECRET,
+//     process.env.GOOGLE_REDIRECT_URI
+//   );
+//   oAuth2Client.setCredentials({ refresh_token: token });
+
+//   try {
+//     // Prepare the event details
+//     const event = {
+//       summary: session.title,
+//       description: session.description,
+//       start: {
+//         dateTime: new Date(
+//           `${session.date}T${session.startTime}:00`
+//         ).toISOString(),
+//         timeZone: "Asia/Kolkata",
+//       },
+//       end: {
+//         dateTime: new Date(
+//           `${session.date}T${session.endTime}:00`
+//         ).toISOString(),
+//         timeZone: "Asia/Kolkata",
+//       },
+//       attendees: [{ email: email }],
+//       reminders: {
+//         useDefault: false,
+//         overrides: [{ method: "email", minutes: 10 }],
+//       },
+//       conferenceData: {
+//         createRequest: {
+//           requestId: "sample123",
+//           conferenceSolutionKey: { type: "hangoutsMeet" },
+//           status: { statusCode: "success" },
+//         },
+//       },
+//     };
+//     // Add event to calendar
+//     const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
+//     const response = await calendar.events.insert({
+//       calendarId: "primary",
+//       resource: event,
+//       conferenceDataVersion: 1,
+//       sendUpdates: "all",
+//     });
+
+//     console.log("Event created: %s", response.data.htmlLink);
+
+//     // Send confirmation email
+//     const data = {
+//       from: "PM Teach <no-reply@pmteach.com>",
+//       to: email,
+//       subject: `You are registered for ${session.title}`,
+//       html: `
+//         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+//           <h2 style="text-align: center; color: #333;">📅 You’re Registered!</h2>
+//           <p style="font-size: 16px; color: #555;">Hello,</p>
+//           <p style="font-size: 16px; color: #555;">
+//             You have successfully registered for the session: <strong>${
+//               session.title
+//             }</strong>.
+//           </p>
+//           <p><strong>📆 Date:</strong> ${new Date(
+//             session.date
+//           ).toLocaleDateString("en-GB", {
+//             day: "2-digit",
+//             month: "short",
+//             year: "numeric",
+//             weekday: "long",
+//           })} ${session.startTime}</p>
+//           <p><strong>⏳ Duration:</strong> ${session.duration} minutes</p>
+//           <p><strong>🎙 Speaker:</strong> ${session.speaker}</p>
+//           <p><strong>🔗 Meeting Link:</strong> <a href="${
+//             session.meetLink
+//           }" style="color: #007bff; text-decoration: none;">Join Session</a></p>
+//           <p><strong>🔔 Calendar Event:</strong> <a href="${
+//             response.data.htmlLink
+//           }" target="_blank" style="color: #28a745;">View in Calendar</a></p>
+//           <p style="font-size: 16px; color: #555; margin-top: 20px;">Thank you for registering!</p>
+//           <p style="font-size: 16px; color: #555;">Best regards,</p>
+//           <p style="font-size: 16px; font-weight: bold;">PM Teach Team</p>
+//         </div>
+//       `,
+//     };
+
+//     mg.messages().send(data, (error, body) => {
+//       if (error) console.error("Mail Error:", error);
+//       else console.log("Mail Sent:", body);
+//     });
+//   } catch (error) {
+//     console.error("Error creating calendar event:", error);
+//   }
+// };
 
 const getGoogleCalendarDate = (date, duration) => {
   const eventStart = new Date(date);
@@ -132,6 +243,6 @@ module.exports = {
   getLiveSessionById,
   updateLiveSession,
   deleteLiveSession,
-  registerUserForSession,
+  registerUserForSessions,
   sendMeetingLink,
 };

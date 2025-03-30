@@ -119,25 +119,24 @@ const deleteLiveSession = async (req, res, next) => {
 
 const registerUserForSession = async (req, res, next) => {
   try {
-    const { sessionId, email } = req.body;
+    const { sessionIds, email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
       res.status(400).json({
         success: true,
-        message: "Login before the register the event.",
-      });
-    } else {
-      const session = await liveSessionService.registerUserForSession(
-        sessionId,
-        email,
-        user._id
-      );
-      res.status(200).json({
-        success: true,
-        message: "Registered successfully.",
-        data: session,
+        message: "Sign Up before the register the event.",
       });
     }
+    await liveSessionService.registerUserForSessions(
+      sessionIds,
+      email,
+      user._id
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Registered successfully.",
+    });
   } catch (err) {
     next(err);
   }
