@@ -2,28 +2,31 @@ const Progress = require("../progress/progress.model");
 const User = require("../users/user.model");
 const onboardingService = require("./onboarding.service");
 
-exports.completeOnboarding = async (req, res) => {
+const completeOnboarding = async (req, res) => {
+  const userId = req.body.userId;
   try {
-    const alreadyOnboarded = await User.findById(req.user.id);
-    if (alreadyOnboarded.isOnboarded) {
+    const alreadyOnboarded = await User.findById(userId);
+    if (userId && alreadyOnboarded.isOnboarded) {
       res.status(200).json({
         success: false,
         message: "You are already onboarded.",
       });
     } else {
       const onboardingData = await onboardingService.createOnboarding(
-        req.user.id,
+        userId,
         req.body
       );
-      const defaultProgress = new Progress({
-        user: req.user.id,
-        course: onboardingData.courseId,
-        sections: onboardingData.sectionIds.map((section) => ({
-          sectionId: section._id,
-          completedVideos: [],
-        })),
-      });
-      await defaultProgress.save();
+      if (userId) {
+        const defaultProgress = new Progress({
+          user: userId,
+          course: onboardingData.courseId,
+          sections: onboardingData.sectionIds.map((section) => ({
+            sectionId: section._id,
+            completedVideos: [],
+          })),
+        });
+        await defaultProgress.save();
+      }
       res.status(201).json({
         success: true,
         message: "Onboarding completed successfully",
@@ -35,7 +38,7 @@ exports.completeOnboarding = async (req, res) => {
   }
 };
 
-exports.getOnboarding = async (req, res, next) => {
+const getOnboarding = async (req, res, next) => {
   const { page, limit, search, ...filters } = req.query;
   const paginationData = { page: page, limit: limit };
   try {
@@ -72,7 +75,43 @@ exports.getOnboarding = async (req, res, next) => {
   }
 };
 
-exports.updateOnboarding = async (req, res) => {
+const attachUserOnboarding = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const onboardingData = await onboardingService.updateOnboarding(
+      id,
+      req.body
+    );
+
+    if (!onboardingData) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Onboarding data not found" });
+    }
+    if (req.user.id) {
+      const defaultProgress = new Progress({
+        user: req.user.id,
+        course: onboardingData.courseId,
+        sections: onboardingData.sectionIds.map((section) => ({
+          sectionId: section._id,
+          completedVideos: [],
+        })),
+      });
+      await defaultProgress.save();
+      await User.findByIdAndUpdate(req.user.id, { isOnboarded: true });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Onboarding data and progress updated successfully",
+      data: onboardingData,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updateOnboarding = async (req, res) => {
   try {
     const onboardingData = await onboardingService.updateOnboarding(
       req.params.id,
@@ -112,7 +151,7 @@ exports.updateOnboarding = async (req, res) => {
   }
 };
 
-exports.deleteOnboarding = async (req, res) => {
+const deleteOnboarding = async (req, res) => {
   const { id } = req.params;
   try {
     const onboardingDeleted = await onboardingService.deleteOnboarding(id);
@@ -128,4 +167,12 @@ exports.deleteOnboarding = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+module.exports = {
+  completeOnboarding,
+  getOnboarding,
+  attachUserOnboarding,
+  updateOnboarding,
+  deleteOnboarding,
 };

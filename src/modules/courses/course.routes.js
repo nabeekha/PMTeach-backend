@@ -14,7 +14,7 @@ const {
 const router = express.Router();
 
 router.post("/", authMiddleware, adminMiddleware, createCourse);
-router.get("/", authMiddleware, getAllCourses);
+router.get("/", getAllCourses);
 router.get("/:id", authMiddleware, getCourseById);
 router.put("/:id", authMiddleware, adminMiddleware, updateCourse);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteCourse);

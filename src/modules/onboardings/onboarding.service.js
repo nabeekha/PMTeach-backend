@@ -11,8 +11,9 @@ exports.createOnboarding = async (userId, onboardingData) => {
     sectionIds,
     careerGoalId,
   });
-
-  await User.findByIdAndUpdate(userId, { isOnboarded: true });
+  if (userId) {
+    await User.findByIdAndUpdate(userId, { isOnboarded: true });
+  }
 
   return await onboarding.save();
 };
