@@ -8,9 +8,27 @@ const liveSessionSchema = new mongoose.Schema(
     endTime: { type: String, required: true },
     duration: { type: String },
     speaker: { type: String, required: true },
+    speakerDescription: { type: String, required: true },
     description: { type: String },
     img: { type: String },
-    meetLink: { type: String, required: true },
+    sessionType: {
+      type: String,
+      required: true,
+      enum: ["live", "onDemand"],
+      default: "live",
+    },
+    meetLink: {
+      type: String,
+      required: function () {
+        return this.sessionType === "live";
+      },
+    },
+    videoUrl: {
+      type: String,
+      required: function () {
+        return this.sessionType === "onDemand";
+      },
+    },
     registeredUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
