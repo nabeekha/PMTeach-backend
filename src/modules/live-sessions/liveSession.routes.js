@@ -17,7 +17,7 @@ const router = express.Router();
 router.post("/register", authMiddleware, registerUserForSession);
 router.post("/", authMiddleware, adminMiddleware, createLiveSession);
 router.get("/", getAllLiveSessions);
-router.get("/:id", authMiddleware, getLiveSessionById);
+router.get("/:id", getLiveSessionById);
 router.put("/:id", authMiddleware, adminMiddleware, updateLiveSession);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteLiveSession);
 
