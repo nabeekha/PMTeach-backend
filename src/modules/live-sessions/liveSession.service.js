@@ -54,7 +54,9 @@ const registerUserForSessions = async (sessionIds, email, userId) => {
   const sessionUpdates = unregisteredSessions.map(async (session) => {
     session.registeredUsers.push(userId);
     await session.save();
-    sendMeetingLink(email, session);
+    if (session?.sessionType === "live") {
+      sendMeetingLink(email, session);
+    }
     return session;
   });
   const registeredSessions = await Promise.all(sessionUpdates);
@@ -65,19 +67,19 @@ const sendMeetingLink = (email, session) => {
   const data = {
     from: "PM Teach <no-reply@pmteach.com>",
     to: email,
-    subject: `You are registered for ${session.title}`,
+    subject: `You are registered for ${session?.title}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
         <h2 style="text-align: center; color: #333;">📅 You’re Registered!</h2>
         <p style="font-size: 16px; color: #555;">Hello,</p>
         <p style="font-size: 16px; color: #555;">
           You have successfully registered for the session: <strong>${
-            session.title
+            session?.title
           }</strong>.
         </p>
         <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin-top: 10px;">
           <p><strong>📆 Date:</strong> ${new Date(
-            session.date
+            session?.date
           ).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "short",
@@ -89,8 +91,8 @@ const sendMeetingLink = (email, session) => {
       hour: "2-digit",
       minute: "2-digit",
     })}</p>
-          <p><strong>⏳ Duration:</strong> ${session.duration}</p>
-          <p><strong>🎙 Speaker:</strong> ${session.speaker}</p>
+          <p><strong>⏳ Duration:</strong> ${session?.duration}</p>
+          <p><strong>🎙 Speaker:</strong> ${session?.speaker}</p>
           <p><strong>🔗 Meeting Link:</strong> <a href="${
             session.meetLink
           }" style="color: #007bff; text-decoration: none;">Join Session</a></p>
@@ -101,11 +103,11 @@ const sendMeetingLink = (email, session) => {
           <a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
             session.title
           )}&dates=${getGoogleCalendarDate(
-      session.date,
-      session.duration
+      session?.date,
+      session?.duration
     )}&details=${encodeURIComponent(
-      session.description
-    )}&location=${encodeURIComponent(session.meetLink)}"
+      session?.description
+    )}&location=${encodeURIComponent(session?.meetLink)}"
           target="_blank" style="background-color: #28a745; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-size: 16px;">
             ➕ Add to Google Calendar
           </a>
@@ -232,9 +234,7 @@ const getGoogleCalendarDate = (date, duration) => {
 };
 
 const parseDuration = (duration) => {
-  const [value, unit] = duration.split(" ");
-  if (unit.startsWith("min")) return value * 60 * 1000;
-  return value * 60 * 60 * 1000;
+  return duration * 60 * 60 * 1000;
 };
 
 module.exports = {
