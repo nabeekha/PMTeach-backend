@@ -149,6 +149,19 @@ const registerUserForSession = async (req, res, next) => {
   }
 };
 
+const sendUserNotifications = async (req, res, next) => {
+  const { sessionIds } = req.body;
+  try {
+    await liveSessionService.sendSessionNotification(sessionIds);
+    res.status(201).json({
+      success: true,
+      message: "Notification send successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createLiveSession,
   getAllLiveSessions,
@@ -156,4 +169,5 @@ module.exports = {
   updateLiveSession,
   deleteLiveSession,
   registerUserForSession,
+  sendUserNotifications,
 };

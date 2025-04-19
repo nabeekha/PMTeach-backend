@@ -2,8 +2,7 @@ const LiveSession = require("./liveSession.model");
 const paginate = require("../../utils/pagination");
 const mailgun = require("mailgun-js");
 const { default: mongoose } = require("mongoose");
-// const { google } = require("googleapis");
-// const { OAuth2 } = google.auth;
+const User = require("../users/user.model");
 
 const DOMAIN = process.env.MAILGUN_DOMAIN;
 const mg = mailgun({
@@ -349,100 +348,252 @@ const sendMeetingLink = async (email, session, suggestedSessionIds = []) => {
   });
 };
 
-// const sendMeetingLink = async (email, session, token) => {
-//   const oAuth2Client = new OAuth2(
-//     process.env.GOOGLE_CLIENT_ID,
-//     process.env.GOOGLE_CLIENT_SECRET,
-//     process.env.GOOGLE_REDIRECT_URI
-//   );
-//   oAuth2Client.setCredentials({ refresh_token: token });
+const sendSessionNotification = async (sessionIds) => {
+  const sessions = await LiveSession.find({ _id: { $in: sessionIds } }).lean();
+  const allUsers = await User.find({}).lean();
 
-//   try {
-//     // Prepare the event details
-//     const event = {
-//       summary: session.title,
-//       description: session.description,
-//       start: {
-//         dateTime: new Date(
-//           `${session.date}T${session.startTime}:00`
-//         ).toISOString(),
-//         timeZone: "Asia/Kolkata",
-//       },
-//       end: {
-//         dateTime: new Date(
-//           `${session.date}T${session.endTime}:00`
-//         ).toISOString(),
-//         timeZone: "Asia/Kolkata",
-//       },
-//       attendees: [{ email: email }],
-//       reminders: {
-//         useDefault: false,
-//         overrides: [{ method: "email", minutes: 10 }],
-//       },
-//       conferenceData: {
-//         createRequest: {
-//           requestId: "sample123",
-//           conferenceSolutionKey: { type: "hangoutsMeet" },
-//           status: { statusCode: "success" },
-//         },
-//       },
-//     };
-//     // Add event to calendar
-//     const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
-//     const response = await calendar.events.insert({
-//       calendarId: "primary",
-//       resource: event,
-//       conferenceDataVersion: 1,
-//       sendUpdates: "all",
-//     });
+  const formatSessionDate = (date, time) => {
+    return `${new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      weekday: "long",
+    })} ${new Date(`1970-01-01T${time}:00`).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  };
 
-//     console.log("Event created: %s", response.data.htmlLink);
+  // Helper function to render session type badge
+  const renderSessionBadge = (sessionType) => {
+    const isLive = sessionType === "live";
+    return `
+      <button style="
+        top: 0px;
+        right: 10px;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        background-color: ${isLive ? "#16a34a" : "#9F7AEA"};
+        color: white;
+        z-index: 1;
+        margin-left:20px;
+        margin-bottom:15px;
+        border: none;
+      ">
+        ${isLive ? "LIVE" : "ON DEMAND"}
+      </button>
+    `;
+  };
 
-//     // Send confirmation email
-//     const data = {
-//       from: "PM Teach <no-reply@pmteach.com>",
-//       to: email,
-//       subject: `You are registered for ${session.title}`,
-//       html: `
-//         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
-//           <h2 style="text-align: center; color: #333;">📅 You’re Registered!</h2>
-//           <p style="font-size: 16px; color: #555;">Hello,</p>
-//           <p style="font-size: 16px; color: #555;">
-//             You have successfully registered for the session: <strong>${
-//               session.title
-//             }</strong>.
-//           </p>
-//           <p><strong>📆 Date:</strong> ${new Date(
-//             session.date
-//           ).toLocaleDateString("en-GB", {
-//             day: "2-digit",
-//             month: "short",
-//             year: "numeric",
-//             weekday: "long",
-//           })} ${session.startTime}</p>
-//           <p><strong>⏳ Duration:</strong> ${session.duration} minutes</p>
-//           <p><strong>🎙 Speaker:</strong> ${session.speaker}</p>
-//           <p><strong>🔗 Meeting Link:</strong> <a href="${
-//             session.meetLink
-//           }" style="color: #007bff; text-decoration: none;">Join Session</a></p>
-//           <p><strong>🔔 Calendar Event:</strong> <a href="${
-//             response.data.htmlLink
-//           }" target="_blank" style="color: #28a745;">View in Calendar</a></p>
-//           <p style="font-size: 16px; color: #555; margin-top: 20px;">Thank you for registering!</p>
-//           <p style="font-size: 16px; color: #555;">Best regards,</p>
-//           <p style="font-size: 16px; font-weight: bold;">PM Teach Team</p>
-//         </div>
-//       `,
-//     };
+  // Single session template
+  const singleSessionTemplate = (session) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Session Notification</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f7fafc;">
+      <table width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+        <!-- Header -->
+        <tr>
+          <td style="padding: 30px 20px; text-align: center; background-color: #ffffff;">
+            <img src="https://www.pmteach.com/photos/pmteach-full.png" alt="Logo" style="max-width: 180px;">
+          </td>
+        </tr>
+        
+        <!-- Content -->
+        <tr>
+          <td style="padding: 40px 20px; background-color: #ffffff;">
+            <h1 style="margin: 0 0 20px; font-size: 24px; color: #2d3748; text-align: center;">
+              New Session Alert! 🚀
+            </h1>
+            
+            <div style="background-color: #f8fafc; border-radius: 8px; padding-bottom: 20px; margin-bottom: 30px; border: 1px solid #e2e8f0; position: relative;">
+              <!-- Badge positioned absolutely within the card -->
+              ${renderSessionBadge(session.sessionType)}
+              <img src="${session.img}" alt="${
+    session.title
+  }" style="width: 100%; border-radius: 6px 6px 0 0; margin-bottom: 15px;">
+              <div style="padding: 0 20px;">
+                <h2 style="margin: 0 0 10px; font-size: 20px; color: #2d3748;">
+                  ${session.title}
+                </h2>
+                ${
+                  session.date
+                    ? `<p style="margin: 0 0 8px; color: #4a5568;"><strong>📅 When:</strong> ${formatSessionDate(
+                        session.date,
+                        session.startTime
+                      )}</p>`
+                    : `<p></p>`
+                }
+                <p style="margin: 0 0 8px; color: #4a5568;"><strong>⏳ Duration:</strong> ${
+                  session.duration
+                } minutes</p>
+                <p style="margin: 0 0 15px; color: #4a5568;"><strong>🎤 Speaker:</strong> ${
+                  session.speaker
+                }</p>
+                <a href="${
+                  process.env.NEXT_PUBLIC_FRONTEND_URL
+                }pages/speaker-series/${
+    session._id
+  }" style="display: inline-block; padding: 10px 20px; background-color: ${
+    session.sessionType === "live" ? "#4299e1" : "#9F7AEA"
+  }; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">
+                  ${session.sessionType === "live" ? "Join Now" : "Watch Now"}
+                </a>
+              </div>
+            </div>
+            
+            <p style="margin: 0; color: #4a5568; line-height: 1.5;">We're excited to have you ${
+              session.sessionType === "live" ? "join us for" : "watch"
+            } this session!</p>
+          </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+          <td style="padding: 20px; text-align: center; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; color: #718096; font-size: 14px;">© ${new Date().getFullYear()} PM Teach. All rights reserved.</p>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
 
-//     mg.messages().send(data, (error, body) => {
-//       if (error) console.error("Mail Error:", error);
-//       else console.log("Mail Sent:", body);
-//     });
-//   } catch (error) {
-//     console.error("Error creating calendar event:", error);
-//   }
-// };
+  // Multiple sessions template
+  const multipleSessionsTemplate = (sessions) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Sessions Notification</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f7fafc;">
+      <table width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+        <!-- Header -->
+        <tr>
+          <td style="padding: 30px 20px; text-align: center; background-color: #ffffff;">
+            <img src="https://www.pmteach.com/photos/pmteach-full.png" alt="Logo" style="max-width: 180px;">
+          </td>
+        </tr>
+        
+        <!-- Content -->
+        <tr>
+          <td style="padding: 40px 20px; background-color: #ffffff;">
+            <h1 style="margin: 0 0 20px; font-size: 24px; color: #2d3748; text-align: center;">New Sessions Alert! 🎉</h1>
+            <p style="margin: 0 0 30px; color: #4a5568; text-align: center;">We've scheduled multiple new sessions you might be interested in:</p>
+            
+            ${sessions
+              .map(
+                (session) => `
+              <div style="background-color: #f8fafc; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e2e8f0; ">
+              
+                <img src="${session.img}" alt="${
+                  session.title
+                }" style="width: 100%; border-radius: 6px 6px 0 0; margin-bottom: 15px; position: relative;">
+                  ${renderSessionBadge(session.sessionType)}
+                <div style="padding: 0 20px 20px;">
+                  <h2 style="margin: 0 0 10px; font-size: 18px; color: #2d3748;">
+                    ${session.title}
+                  </h2>
+                  ${
+                    session.date
+                      ? `<p style="margin: 0 0 8px; color: #4a5568;"><strong>📅 When:</strong> ${formatSessionDate(
+                          session.date,
+                          session.startTime
+                        )}</p>`
+                      : `<p></p>`
+                  }
+                  <p style="margin: 0 0 8px; color: #4a5568;"><strong>⏳ Duration:</strong> ${
+                    session.duration
+                  } minutes</p>
+                  <p style="margin: 0 0 15px; color: #4a5568;"><strong>🎤 Speaker:</strong> ${
+                    session.speaker
+                  }</p>
+                  <a href="${
+                    process.env.NEXT_PUBLIC_FRONTEND_URL
+                  }pages/speaker-series/${
+                  session._id
+                }" style="display: inline-block; padding: 10px 20px; background-color: ${
+                  session.sessionType === "live" ? "#4299e1" : "#9F7AEA"
+                }; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">
+                    ${session.sessionType === "live" ? "Join Now" : "Watch Now"}
+                  </a>
+                </div>
+              </div>
+            `
+              )
+              .join("")}
+            
+            <p style="margin: 30px 0 0; color: #4a5568; line-height: 1.5;">We're excited to have you explore these ${
+              sessions.some((s) => s.sessionType === "live")
+                ? "live and on-demand"
+                : "on-demand"
+            } sessions!</p>
+          </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+          <td style="padding: 20px; text-align: center; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; color: #718096; font-size: 14px;">© ${new Date().getFullYear()} PM Teach. All rights reserved.</p>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  // Rest of the function remains the same...
+  // Determine which template to use
+  const htmlContent =
+    sessions.length === 1
+      ? singleSessionTemplate(sessions[0])
+      : multipleSessionsTemplate(sessions);
+
+  const subject =
+    sessions.length === 1
+      ? `New ${
+          sessions[0].sessionType === "live" ? "Live" : "On-Demand"
+        } Session: ${sessions[0].title}`
+      : `New Sessions Available (${sessions.length})`;
+
+  // Send emails to all users
+  const emailPromises = allUsers.map((user) => {
+    const data = {
+      from: "PM Teach <notifications@pmteach.com>",
+      to: user.email,
+      subject: subject,
+      html: htmlContent,
+    };
+
+    return new Promise((resolve, reject) => {
+      mg.messages().send(data, (error, body) => {
+        if (error) {
+          console.error(`Error sending to ${user.email}:`, error);
+          reject(error);
+        } else {
+          console.log(`Sent to ${user.email}`);
+          resolve(body);
+        }
+      });
+    });
+  });
+
+  try {
+    await Promise.all(emailPromises);
+    console.log("All notifications sent successfully");
+  } catch (error) {
+    console.error("Error sending notifications:", error);
+    throw error;
+  }
+};
 
 const getGoogleCalendarDate = (date, duration) => {
   const eventStart = new Date(date);
@@ -467,4 +618,5 @@ module.exports = {
   registerUserForSessions,
   sendMeetingLink,
   getSuggestedSessions,
+  sendSessionNotification,
 };

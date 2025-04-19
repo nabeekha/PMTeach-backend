@@ -6,6 +6,7 @@ const {
   updateLiveSession,
   deleteLiveSession,
   registerUserForSession,
+  sendUserNotifications,
 } = require("./liveSession.controller");
 const {
   authMiddleware,
@@ -16,6 +17,12 @@ const router = express.Router();
 
 router.post("/register", authMiddleware, registerUserForSession);
 router.post("/", authMiddleware, adminMiddleware, createLiveSession);
+router.post(
+  "/send-notifications",
+  authMiddleware,
+  adminMiddleware,
+  sendUserNotifications
+);
 router.get("/", getAllLiveSessions);
 router.get("/:id", getLiveSessionById);
 router.put("/:id", authMiddleware, adminMiddleware, updateLiveSession);
