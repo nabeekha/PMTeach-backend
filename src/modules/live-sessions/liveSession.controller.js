@@ -69,10 +69,16 @@ const getLiveSessionById = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "liveSession not found" });
     }
+    const suggestedSessions = await liveSessionService.getSuggestedSessions(
+      req.params.id
+    );
     res.status(200).json({
       success: true,
       message: "liveSession retrieved successfully",
-      data: liveSession,
+      data: {
+        session: liveSession,
+        suggestions: suggestedSessions,
+      },
     });
   } catch (err) {
     next(err);
@@ -119,7 +125,7 @@ const deleteLiveSession = async (req, res, next) => {
 
 const registerUserForSession = async (req, res, next) => {
   try {
-    const { sessionIds, email } = req.body;
+    const { sessionIds, email, suggestedSessionIds } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
       res.status(400).json({
@@ -129,6 +135,7 @@ const registerUserForSession = async (req, res, next) => {
     }
     await liveSessionService.registerUserForSessions(
       sessionIds,
+      suggestedSessionIds,
       email,
       user._id
     );
@@ -142,6 +149,19 @@ const registerUserForSession = async (req, res, next) => {
   }
 };
 
+const sendUserNotifications = async (req, res, next) => {
+  const { sessionIds } = req.body;
+  try {
+    await liveSessionService.sendSessionNotification(sessionIds);
+    res.status(201).json({
+      success: true,
+      message: "Notification send successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createLiveSession,
   getAllLiveSessions,
@@ -149,4 +169,5 @@ module.exports = {
   updateLiveSession,
   deleteLiveSession,
   registerUserForSession,
+  sendUserNotifications,
 };

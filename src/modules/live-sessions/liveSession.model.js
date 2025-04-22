@@ -3,21 +3,54 @@ const mongoose = require("mongoose");
 const liveSessionSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    date: { type: Date, required: true },
-    startTime: { type: String, required: true },
-    endTime: { type: String, required: true },
+    date: {
+      type: Date,
+      required: function () {
+        return this.sessionType === "live";
+      },
+    },
+    startTime: {
+      type: String,
+      required: function () {
+        return this.sessionType === "live";
+      },
+    },
+    endTime: {
+      type: String,
+      required: function () {
+        return this.sessionType === "live";
+      },
+    },
     duration: { type: String },
     speaker: { type: String, required: true },
+    speakerDescription: { type: String, required: true },
     description: { type: String },
     img: { type: String },
-    meetLink: { type: String, required: true },
+    sessionType: {
+      type: String,
+      required: true,
+      enum: ["live", "onDemand"],
+      default: "live",
+    },
+    meetLink: {
+      type: String,
+      required: function () {
+        return this.sessionType === "live";
+      },
+    },
+    videoUrl: {
+      type: String,
+      required: function () {
+        return this.sessionType === "onDemand";
+      },
+    },
     registeredUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
 
 liveSessionSchema.pre("save", function (next) {
-  if (this.startTime && this.endTime) {
+  if (this.startTime && this.endTime && this.sessionType === "live") {
     const [startHours, startMinutes] = this.startTime.split(":").map(Number);
     const [endHours, endMinutes] = this.endTime.split(":").map(Number);
 
@@ -27,7 +60,7 @@ liveSessionSchema.pre("save", function (next) {
     let diff = endTotalMinutes - startTotalMinutes;
     if (diff < 0) diff += 24 * 60;
 
-    this.duration = `${diff} minutes`;
+    this.duration = `${diff}`;
   }
   next();
 });
