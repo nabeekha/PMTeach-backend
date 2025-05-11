@@ -2,7 +2,8 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    name: String,
+    firstName: String,
+    lastName: String,
     email: { type: String, unique: true },
     password: { type: String, required: false },
     role: { type: String, enum: ["admin", "user"], default: "user" },
@@ -19,6 +20,11 @@ const userSchema = new mongoose.Schema(
     membership_start_date: Date,
     membership_end_date: Date,
     isOnboarded: { type: Boolean, default: false },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
+    otp: String,
+    otpExpire: Date,
+    isVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

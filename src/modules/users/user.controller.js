@@ -1,5 +1,10 @@
+const mailgun = require("mailgun-js");
+const DOMAIN = process.env.MAILGUN_DOMAIN;
+const mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: DOMAIN });
 const userService = require("./user.service");
 const { validateUser } = require("../../utils/validation");
+const User = require("./user.model");
+const jwt = require("jsonwebtoken");
 
 // Register a new user
 const register = async (req, res, next) => {
@@ -7,10 +12,12 @@ const register = async (req, res, next) => {
   if (error) return res.status(400).json({ message: error.details[0].message });
 
   try {
+    const { email } = req.body;
     const { user, token } = await userService.register(req.body);
+    await sendOtp(email);
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "OTP sent to email",
       token,
       user,
     });
@@ -40,6 +47,7 @@ const login = async (req, res, next) => {
   }
 };
 
+// Gel All User
 const getAllUsers = async (req, res, next) => {
   const { page, limit, search, ...filters } = req.query;
   const paginationData = { page: page, limit: limit };
@@ -141,6 +149,123 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+// Send OTP
+const sendOtp = async (email) => {
+  try {
+    const { otp } = await userService.sendOtp(email);
+
+    const mailData = {
+      from: `Your App <no-reply@${DOMAIN}>`,
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+    };
+
+    mg.messages().send(mailData);
+  } catch (err) {
+    console.log("err::: ", err);
+  }
+};
+
+// Verify OTP
+const verifyOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    const isValid = await userService.verifyOtp(email, otp);
+    if (!isValid)
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    const user = await User.findOne({ email });
+
+    if (user) {
+      const token = jwt.sign(
+        {
+          id: user._id,
+          role: user.role,
+          loginType: user.loginType,
+          isOnboarded: user.isOnboarded,
+          isVerified: user.isVerified,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "OTP verified successfully",
+        token,
+        user,
+      });
+    }
+
+    return res.status(404).json({ message: "User not found" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Forgot Password
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const { user, otp } = await userService.forgotPassword(email);
+
+    const mailData = {
+      from: `Your App <no-reply@${DOMAIN}>`,
+      to: email,
+      subject: "Reset Password OTP",
+      text: `Your OTP for password reset is ${otp}. It will expire in 10 minutes.`,
+    };
+
+    mg.messages().send(mailData, (error, body) => {
+      if (error) return next(error);
+      res
+        .status(200)
+        .json({ success: true, message: "Password reset OTP sent" });
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Reset Password
+const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const reset = await userService.resetPassword(email, otp, newPassword);
+    if (!reset)
+      return res.status(400).json({ message: "OTP invalid or expired" });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Password reset successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// RE Send OTP
+const resendOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const { otp } = await userService.sendOtp(email);
+
+    const mailData = {
+      from: `Your App <no-reply@${DOMAIN}>`,
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+    };
+
+    mg.messages().send(mailData, (error, body) => {
+      if (error) return next(error);
+      res.status(200).json({ success: true, message: "OTP sent to email" });
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -149,4 +274,8 @@ module.exports = {
   createOrRetrieveUser,
   updateUser,
   deleteUser,
+  verifyOtp,
+  forgotPassword,
+  resetPassword,
+  resendOtp,
 };

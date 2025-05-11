@@ -7,6 +7,10 @@ const {
   createOrRetrieveUser,
   updateUser,
   deleteUser,
+  resendOtp,
+  verifyOtp,
+  forgotPassword,
+  resetPassword,
 } = require("../users/user.controller");
 const {
   authMiddleware,
@@ -35,5 +39,17 @@ router.put("/:id", authMiddleware, adminMiddleware, updateUser);
 
 // Delete user by ID
 router.delete("/:id", authMiddleware, adminMiddleware, deleteUser);
+
+// send otp
+router.post("/resend-otp", resendOtp);
+
+// verify otp
+router.post("/verify-otp", verifyOtp);
+
+// forgot password
+router.post("/forgot-password", forgotPassword);
+
+// reset password
+router.post("/reset-password", resetPassword);
 
 module.exports = router;
