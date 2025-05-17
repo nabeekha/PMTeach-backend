@@ -5,7 +5,8 @@ const userService = require("./user.service");
 const { validateUser } = require("../../utils/validation");
 const User = require("./user.model");
 const jwt = require("jsonwebtoken");
-
+const onboardingService = require("../onboardings/onboarding.service");
+const Progress = require("../progress/progress.model");
 // Register a new user
 const register = async (req, res, next) => {
   const { error } = validateUser(req.body);
@@ -27,10 +28,35 @@ const register = async (req, res, next) => {
 };
 
 // Login a user
+
 const login = async (req, res, next) => {
   try {
     const { email, password, loginType } = req.body;
-    const { token, user } = await userService.login({
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.isVerified) {
+      // Resend OTP
+      const { otp } = await userService.sendOtp(email);
+      const mailData = {
+        from: `Your App <no-reply@${DOMAIN}>`,
+        to: email,
+        subject: "Email Verification OTP",
+        text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+      };
+      mg.messages().send(mailData);
+
+      return res.status(401).json({
+        success: false,
+        message: "userNotVerified",
+      });
+    }
+
+    const { token, user: validUser } = await userService.login({
       email,
       password,
       loginType,
@@ -40,7 +66,7 @@ const login = async (req, res, next) => {
       success: true,
       message: "Login successful",
       token,
-      user,
+      user: validUser,
     });
   } catch (err) {
     next(err);
@@ -163,42 +189,69 @@ const sendOtp = async (email) => {
 
     mg.messages().send(mailData);
   } catch (err) {
-    console.log("err::: ", err);
+    // console.log("err::: ", err);
   }
 };
 
 // Verify OTP
 const verifyOtp = async (req, res, next) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, onboardedId } = req.body;
+
     const isValid = await userService.verifyOtp(email, otp);
     if (!isValid)
       return res.status(400).json({ message: "Invalid or expired OTP" });
 
     const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user) {
-      const token = jwt.sign(
+    let updatedUser = user;
+
+    if (onboardedId) {
+      const onboardingData = await onboardingService.updateOnboarding(
+        onboardedId,
         {
-          id: user._id,
-          role: user.role,
-          loginType: user.loginType,
-          isOnboarded: user.isOnboarded,
-          isVerified: user.isVerified,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
+          userId: user._id,
+        }
       );
 
-      return res.status(200).json({
-        success: true,
-        message: "OTP verified successfully",
-        token,
-        user,
+      // Create default progress
+      const defaultProgress = new Progress({
+        user: user._id,
+        course: onboardingData.courseId,
+        sections: onboardingData.sectionIds.map((section) => ({
+          sectionId: section._id,
+          completedVideos: [],
+        })),
       });
+      await defaultProgress.save();
+
+      // Update isOnboarded and get the updated user
+      updatedUser = await User.findByIdAndUpdate(
+        user._id,
+        { isOnboarded: true },
+        { new: true }
+      );
     }
 
-    return res.status(404).json({ message: "User not found" });
+    const token = jwt.sign(
+      {
+        id: updatedUser._id,
+        role: updatedUser.role,
+        loginType: updatedUser.loginType,
+        isOnboarded: updatedUser.isOnboarded,
+        isVerified: updatedUser.isVerified,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+      token,
+      user: updatedUser,
+    });
   } catch (err) {
     next(err);
   }
