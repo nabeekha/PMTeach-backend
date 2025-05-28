@@ -7,6 +7,10 @@ const User = require("./user.model");
 const jwt = require("jsonwebtoken");
 const onboardingService = require("../onboardings/onboarding.service");
 const Progress = require("../progress/progress.model");
+const {
+  getOtpEmailTemplate,
+  getPasswordResetTemplate,
+} = require("../../common/templates/emailTemplates");
 // Register a new user
 const register = async (req, res, next) => {
   const { error } = validateUser(req.body);
@@ -43,9 +47,10 @@ const login = async (req, res, next) => {
       // Resend OTP
       const { otp } = await userService.sendOtp(email);
       const mailData = {
-        from: `Your App <no-reply@${DOMAIN}>`,
+        from: `Pm Teach <no-reply@${DOMAIN}>`,
         to: email,
         subject: "Email Verification OTP",
+        html: getOtpEmailTemplate(otp),
         text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
       };
       mg.messages().send(mailData);
@@ -181,9 +186,10 @@ const sendOtp = async (email) => {
     const { otp } = await userService.sendOtp(email);
 
     const mailData = {
-      from: `Your App <no-reply@${DOMAIN}>`,
+      from: `Pm Teach <no-reply@${DOMAIN}>`,
       to: email,
       subject: "Your OTP Code",
+      html: getOtpEmailTemplate(otp),
       text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
     };
 
@@ -264,9 +270,10 @@ const forgotPassword = async (req, res, next) => {
     const { user, otp } = await userService.forgotPassword(email);
 
     const mailData = {
-      from: `Your App <no-reply@${DOMAIN}>`,
+      from: `Pm Teach <no-reply@${DOMAIN}>`,
       to: email,
       subject: "Reset Password OTP",
+      html: getPasswordResetTemplate(otp),
       text: `Your OTP for password reset is ${otp}. It will expire in 10 minutes.`,
     };
 
@@ -304,9 +311,10 @@ const resendOtp = async (req, res, next) => {
     const { otp } = await userService.sendOtp(email);
 
     const mailData = {
-      from: `Your App <no-reply@${DOMAIN}>`,
+      from: `Pm Teach <no-reply@${DOMAIN}>`,
       to: email,
       subject: "Your OTP Code",
+      html: getOtpEmailTemplate(otp),
       text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
     };
 
