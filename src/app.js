@@ -23,6 +23,7 @@ const progressRoutes = require("./modules/progress/progress.routes");
 const googleAuthRoutes = require("./common/routes/googleAuth.routes");
 const uploadResumeRoutes = require("./common/routes/uploadResume.routes");
 const liveSessionRoutes = require("./modules/live-sessions/liveSession.routes");
+const questionBankRoutes = require("./modules/question-bank/questionBank.route");
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use("/api/quiz", quizRoute);
 app.use("/api/quiz-history", quizHistoryRoute);
 app.use("/api/upload-resume", uploadResumeRoutes);
 app.use("/api/live-sessions", liveSessionRoutes);
+app.use("/api/question-bank", questionBankRoutes);
 // Redirect route after login success
 app.get("/dashboard", (req, res) => {
   if (req.isAuthenticated()) {
