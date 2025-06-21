@@ -4,6 +4,7 @@ const {
   getSections,
   updateSection,
   deleteSection,
+  getSectionById,
 } = require("./section.controller");
 const {
   authMiddleware,
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.post("/", authMiddleware, adminMiddleware, createSection);
 router.get("/", getSections);
+router.get("/:id", authMiddleware, adminMiddleware, getSectionById);
 router.put("/:id", authMiddleware, adminMiddleware, updateSection);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteSection);
 

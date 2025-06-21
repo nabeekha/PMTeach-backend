@@ -35,6 +35,12 @@ const getAllQuizzes = async (query, page, limit) => {
   }
 };
 
+const getQuizById = async (id) => {
+  const quiz = await Quiz.findById(id);
+  if (!quiz) throw new Error("Quiz not found.");
+  return quiz;
+};
+
 const updateQuiz = async (id, data) => {
   const quiz = await Quiz.findByIdAndUpdate(id, data, { new: true });
   if (!quiz) {
@@ -53,4 +59,5 @@ module.exports = {
   getAllQuizzes,
   updateQuiz,
   deleteQuiz,
+  getQuizById,
 };

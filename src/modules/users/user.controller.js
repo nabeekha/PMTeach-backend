@@ -44,7 +44,6 @@ const login = async (req, res, next) => {
     }
 
     if (!user.isVerified) {
-      // Resend OTP
       const { otp } = await userService.sendOtp(email);
       const mailData = {
         from: `Pm Teach <no-reply@${DOMAIN}>`,
@@ -53,7 +52,7 @@ const login = async (req, res, next) => {
         html: getOtpEmailTemplate(otp),
         text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
       };
-      mg.messages().send(mailData);
+      await mg.messages().send(mailData);
 
       return res.status(401).json({
         success: false,

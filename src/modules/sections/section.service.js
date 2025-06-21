@@ -25,6 +25,12 @@ const getSections = async (query, page, limit) => {
   }
 };
 
+const getSectionById = async (id) => {
+  const section = await Section.findById(id);
+  if (!section) throw new Error("Section not found.");
+  return section;
+};
+
 const updateSection = async (id, data) => {
   const section = await Section.findByIdAndUpdate(id, data, { new: true });
   if (!section) throw new Error("Section not found.");
@@ -40,4 +46,5 @@ module.exports = {
   getSections,
   updateSection,
   deleteSection,
+  getSectionById,
 };

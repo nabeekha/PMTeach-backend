@@ -51,6 +51,24 @@ const getSections = async (req, res, next) => {
   }
 };
 
+const getSectionById = async (req, res, next) => {
+  try {
+    const section = await sectionService.getSectionById(req.params.id);
+    if (!section) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Section not found" });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Section retrieved successfully",
+      data: section,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const updateSection = async (req, res, next) => {
   try {
     const updatedSection = await sectionService.updateSection(
@@ -89,4 +107,5 @@ module.exports = {
   getSections,
   updateSection,
   deleteSection,
+  getSectionById,
 };

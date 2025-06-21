@@ -77,6 +77,24 @@ const getAllQuizzes = async (req, res, next) => {
   }
 };
 
+const getQuizById = async (req, res, next) => {
+  try {
+    const quiz = await quizService.getQuizById(req.params.id);
+    if (!quiz) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Quiz not found" });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Quiz retrieved successfully",
+      data: quiz,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Update a quiz (Admin)
 const updateQuiz = async (req, res, next) => {
   try {
@@ -121,4 +139,5 @@ module.exports = {
   getAllQuizzes,
   updateQuiz,
   deleteQuiz,
+  getQuizById,
 };
