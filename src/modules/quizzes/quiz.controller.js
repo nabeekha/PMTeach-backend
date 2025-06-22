@@ -51,10 +51,7 @@ const getAllQuizzes = async (req, res, next) => {
       query[key] = filters[key];
     }
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
+      query.$or = [{ quizTitle: { $regex: search, $options: "i" } }];
     }
     const quizzes = await quizService.getAllQuizzes(
       query,

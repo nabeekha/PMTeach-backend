@@ -25,6 +25,8 @@ const getAllLiveSessions = async (req, res, next) => {
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
+        { speaker: { $regex: search, $options: "i" } },
+        { speakerDescription: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
       ];
     }
