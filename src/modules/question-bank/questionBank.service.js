@@ -1,92 +1,94 @@
-const QuestionBank = require("./questionBank.model");
-const paginate = require("../../utils/pagination");
-const slugify = require("../../utils/slugify");
+const { Question, Category, QuestionBank } = require("./questionBank.model");
 
-exports.getAllQuestionBanks = async (query, page, limit) => {
-  return await paginate(QuestionBank, query, page, limit);
+// Question Bank Services
+exports.createQuestionBank = async (data) => {
+  return await QuestionBank.create(data);
 };
 
-exports.getQuestionBanks = async () => {
-  return await QuestionBank.find({}, { "categories.questions": 0 });
-};
-
-exports.getQuestionBankById = async (id) => {
-  return await QuestionBank.findById(id);
-};
-
-exports.addQuestionBank = async (data) => {
-  if (!data.slug && data.name) {
-    data.slug = slugify(data.name);
-  }
-
-  const questionBank = new QuestionBank(data);
-  return await questionBank.save();
-};
-
-exports.updateQuestionBank = async (id, data) => {
-  if (data.name) {
-    data.slug = slugify(data.name);
-  }
-
-  return await QuestionBank.findByIdAndUpdate(id, data, {
-    new: true,
-    runValidators: true,
-  });
-};
-
-exports.deleteQuestionBank = async (id) => {
-  return await QuestionBank.findByIdAndDelete(id);
-};
-
-// Get categories for a specific bank
-exports.getCategoriesByBankSlug = async (slug) => {
-  const bank = await QuestionBank.findOne({ slug })
-    .select("name categories.title categories.slug categories.description")
-    .lean();
-
-  if (!bank) throw new Error("Question bank not found");
-
-  return {
-    questionBank: { name: bank.name },
-    data: bank.categories,
-  };
-};
-
-// Get single category with questions
-exports.getCategoryWithQuestions = async (bankSlug, categorySlug) => {
-  const bank = await QuestionBank.findOne({ slug: bankSlug });
-  if (!bank) throw new Error("Question bank not found");
-
-  const category = bank.categories.find((c) => c.slug === categorySlug);
-  if (!category) throw new Error("Category not found");
-
-  return {
-    ...category.toObject(),
-    questionBank: {
-      name: bank.name,
-      slug: bank.slug,
-    },
-  };
-};
-
-exports.getOtherCategories = async (bankSlug, excludeCategorySlug) => {
-  const bank = await QuestionBank.findOne({ slug: bankSlug })
-    .select("categories.title categories.slug categories.description")
-    .lean();
-
-  if (!bank) throw new Error("Question bank not found");
-
-  return bank.categories
-    .filter((cat) => cat.slug !== excludeCategorySlug)
-    .map((cat) => ({
-      title: cat.title,
-      slug: cat.slug,
-      description: cat.description,
-    }));
+exports.getAllQuestionBanks = async () => {
+  return await QuestionBank.find();
 };
 
 exports.getQuestionBankBySlug = async (slug) => {
-  return await QuestionBank.findOne({ slug })
-    .select("name slug description categories.title categories.slug")
-    .lean();
+  return await QuestionBank.findOne({ slug });
+};
+
+exports.updateQuestionBank = async (id, data) => {
+  return await QuestionBank.findByIdAndUpdate(id, data, { new: true });
+};
+
+exports.deleteQuestionBank = async (id) => {
+  const bank = await QuestionBank.findByIdAndDelete(id);
+  if (bank) {
+    await Category.deleteMany({ questionBank: id });
+    await Question.deleteMany({ questionBank: id });
+  }
+  return bank;
+};
+
+// Category Services
+exports.createCategory = async (data) => {
+  const category = await Category.create(data);
+  if (category && data.questionBank) {
+    await QuestionBank.findByIdAndUpdate(data.questionBank, {
+      $push: { categories: category._id },
+    });
+  }
+  return category;
+};
+
+exports.getCategoriesByBank = async (questionBankId) => {
+  return await Category.find({ questionBank: questionBankId });
+};
+
+exports.getCategoryBySlug = async (questionBankId, slug) => {
+  return await Category.findOne({ questionBank: questionBankId, slug });
+};
+
+exports.updateCategory = async (id, data) => {
+  return await Category.findByIdAndUpdate(id, data, { new: true });
+};
+
+exports.deleteCategory = async (id) => {
+  const category = await Category.findByIdAndDelete(id);
+  if (category) {
+    await QuestionBank.findByIdAndUpdate(category.questionBank, {
+      $pull: { categories: category._id },
+    });
+    await Question.deleteMany({ category: id });
+  }
+  return category;
+};
+
+// Question Services
+exports.createQuestion = async (data) => {
+  const question = await Question.create(data);
+  if (question && data.category) {
+    await Category.findByIdAndUpdate(data.category, {
+      $push: { questions: question._id },
+    });
+  }
+  return question;
+};
+
+exports.getQuestionsByCategory = async (categoryId) => {
+  return await Question.find({ category: categoryId });
+};
+
+exports.getQuestionBySlug = async (categoryId, slug) => {
+  return await Question.findOne({ category: categoryId, slug });
+};
+
+exports.updateQuestion = async (id, data) => {
+  return await Question.findByIdAndUpdate(id, data, { new: true });
+};
+
+exports.deleteQuestion = async (id) => {
+  const question = await Question.findByIdAndDelete(id);
+  if (question && question.category) {
+    await Category.findByIdAndUpdate(question.category, {
+      $pull: { questions: question._id },
+    });
+  }
+  return question;
 };

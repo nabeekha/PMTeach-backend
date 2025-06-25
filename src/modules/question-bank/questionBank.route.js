@@ -1,38 +1,84 @@
 const express = require("express");
 const router = express.Router();
-const {
-  getQuestionBanks, // For tabs
-  getQuestionBankBySlug, // For specific bank
-  getBankCategories, // Categories for a bank
-  getCategoryWithQuestions, // Single category with questions
-  addQuestionBank,
-  updateQuestionBank,
-  deleteQuestionBank,
-  getAllQuestionBanks,
-} = require("./questionBank.controller");
+const questionBankController = require("./questionBank.controller");
 const {
   adminMiddleware,
   authMiddleware,
 } = require("../../middleware/authMiddleware");
 
-// Tabs data
-router.get("/question-tabs", getQuestionBanks);
+// Question Bank Routes
+router.post(
+  "/",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.createQuestionBank
+);
+router.get("/", questionBankController.getAllQuestionBanks);
+router.get("/:slug", questionBankController.getQuestionBankBySlug);
+router.put(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.updateQuestionBank
+);
+router.delete(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.deleteQuestionBank
+);
 
-// All banks data
-router.get("/", getAllQuestionBanks);
+// Category Routes
+router.post(
+  "/:bankSlug/categories",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.createCategory
+);
+router.get("/:bankSlug/categories", questionBankController.getCategoriesByBank);
+router.get(
+  "/:bankSlug/categories/:categorySlug",
+  questionBankController.getCategoryWithQuestions
+);
+router.put(
+  "/:bankSlug/categories/:categorySlug",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.updateCategory
+);
+router.delete(
+  "/:bankSlug/categories/:categorySlug",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.deleteCategory
+);
 
-// Get specific question bank
-router.get("/:slug", getQuestionBankBySlug);
-
-// Get categories for a question bank
-router.get("/:slug/categories", getBankCategories);
-
-// Get single category with questions
-router.get("/:bankSlug/categories/:categorySlug", getCategoryWithQuestions);
-
-// Admin routes
-router.post("/", authMiddleware, adminMiddleware, addQuestionBank);
-router.put("/:id", authMiddleware, adminMiddleware, updateQuestionBank);
-router.delete("/:id", authMiddleware, adminMiddleware, deleteQuestionBank);
+// Question Routes
+router.post(
+  "/:bankSlug/categories/:categorySlug/questions",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.createQuestion
+);
+router.get(
+  "/:bankSlug/categories/:categorySlug/questions",
+  questionBankController.getQuestionsByCategory
+);
+router.get(
+  "/:bankSlug/categories/:categorySlug/questions/:questionSlug",
+  questionBankController.getQuestionBySlug
+);
+router.put(
+  "/:bankSlug/categories/:categorySlug/questions/:questionSlug",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.updateQuestion
+);
+router.delete(
+  "/:bankSlug/categories/:categorySlug/questions/:questionSlug",
+  authMiddleware,
+  adminMiddleware,
+  questionBankController.deleteQuestion
+);
 
 module.exports = router;
