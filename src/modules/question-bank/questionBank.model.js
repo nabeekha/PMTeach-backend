@@ -48,6 +48,7 @@ const Category = mongoose.model("Category", categorySchema);
 const questionBankSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+    questionTitle: { type: String },
     slug: { type: String, unique: true },
     description: String,
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
