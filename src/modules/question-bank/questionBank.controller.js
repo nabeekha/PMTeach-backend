@@ -470,7 +470,6 @@ exports.updateQuestion = async (req, res) => {
 };
 
 exports.deleteQuestion = async (req, res) => {
-  console.log("req.params.bankSlug::: ", req.params.bankSlug);
   try {
     const questionBank = await questionBankService.getQuestionBankBySlug(
       req.params.bankSlug
@@ -492,7 +491,6 @@ exports.deleteQuestion = async (req, res) => {
         message: "Category not found",
       });
     }
-    console.log("req.params.questionSlug::: ", req.params.questionSlug);
     const question = await questionBankService.getQuestionBySlug(
       category._id,
       req.params.questionSlug
