@@ -16,7 +16,8 @@ exports.createQuestionBank = async (req, res) => {
 
 exports.getAllQuestionBanks = async (req, res) => {
   try {
-    const questionBanks = await questionBankService.getAllQuestionBanks();
+    const { search } = req.query;
+    const questionBanks = await questionBankService.getAllQuestionBanks(search);
     res.status(200).json({
       success: true,
       message: "Question banks retrieved successfully",
@@ -120,6 +121,7 @@ exports.createCategory = async (req, res) => {
 
 exports.getCategoriesByBank = async (req, res) => {
   try {
+    const { search } = req.query;
     const questionBank = await questionBankService.getQuestionBankBySlug(
       req.params.bankSlug
     );
@@ -131,7 +133,8 @@ exports.getCategoriesByBank = async (req, res) => {
     }
 
     const categories = await questionBankService.getCategoriesByBank(
-      questionBank._id
+      questionBank._id,
+      search
     );
 
     res.status(200).json({
@@ -313,6 +316,7 @@ exports.createQuestion = async (req, res) => {
 
 exports.getQuestionsByCategory = async (req, res) => {
   try {
+    const { search } = req.query;
     const questionBank = await questionBankService.getQuestionBankBySlug(
       req.params.bankSlug
     );
@@ -335,10 +339,10 @@ exports.getQuestionsByCategory = async (req, res) => {
     }
 
     const questions = await questionBankService.getQuestionsByCategory(
-      category._id
+      category._id,
+      search
     );
 
-    // Get all other categories in the same question bank
     const otherCategories = await questionBankService
       .getCategoriesByBank(questionBank._id)
       .then((categories) =>

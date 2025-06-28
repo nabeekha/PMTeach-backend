@@ -168,10 +168,14 @@ exports.deleteBlogTopic = async (req, res) => {
 
 // Blog Post Controllers
 exports.getBlogPosts = async (req, res, next) => {
-  const { page, limit, search, ...filters } = req.query;
+  const { page, limit, search, isPublished, ...filters } = req.query;
+
   const paginationData = { page: page, limit: limit };
   try {
     const query = {};
+    if (isPublished) {
+      query.isPublished = Boolean(isPublished);
+    }
     for (const key in filters) {
       query[key] = filters[key];
     }

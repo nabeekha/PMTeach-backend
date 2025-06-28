@@ -5,8 +5,15 @@ exports.createQuestionBank = async (data) => {
   return await QuestionBank.create(data);
 };
 
-exports.getAllQuestionBanks = async () => {
-  return await QuestionBank.find();
+exports.getAllQuestionBanks = async (search = "") => {
+  const query = {};
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+    ];
+  }
+  return await QuestionBank.find(query).sort({ createdAt: -1 });
 };
 
 exports.getQuestionBankBySlug = async (slug) => {
@@ -37,8 +44,15 @@ exports.createCategory = async (data) => {
   return category;
 };
 
-exports.getCategoriesByBank = async (questionBankId) => {
-  return await Category.find({ questionBank: questionBankId });
+exports.getCategoriesByBank = async (bankId, search = "") => {
+  const query = { questionBank: bankId };
+  if (search) {
+    query.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+    ];
+  }
+  return await Category.find(query).sort({ title: 1 });
 };
 
 exports.getCategoryBySlug = async (questionBankId, slug) => {
@@ -71,8 +85,16 @@ exports.createQuestion = async (data) => {
   return question;
 };
 
-exports.getQuestionsByCategory = async (categoryId) => {
-  return await Question.find({ category: categoryId });
+exports.getQuestionsByCategory = async (categoryId, search = "") => {
+  const query = { category: categoryId };
+  if (search) {
+    query.$or = [
+      { question: { $regex: search, $options: "i" } },
+      { answer: { $regex: search, $options: "i" } },
+      { guide: { $regex: search, $options: "i" } },
+    ];
+  }
+  return await Question.find(query).sort({ createdAt: -1 });
 };
 
 exports.getQuestionBySlug = async (categoryId, slug) => {

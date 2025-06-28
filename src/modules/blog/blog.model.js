@@ -19,7 +19,7 @@ const blogPostModel = new mongoose.Schema(
   {
     title: { type: String, required: true },
     slug: { type: String, unique: true },
-    featuredImage: String,
+    blogImageUrl: String,
     author: {
       name: String,
       avatar: String,
@@ -28,6 +28,7 @@ const blogPostModel = new mongoose.Schema(
     topics: [{ type: mongoose.Schema.Types.ObjectId, ref: "BlogTopic" }],
     content: { type: String, required: true },
     isFeatured: { type: Boolean, default: false },
+    isPublished: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
