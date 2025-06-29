@@ -609,6 +609,12 @@ const parseDuration = (duration) => {
   return duration * 60 * 60 * 1000;
 };
 
+const getLiveSessionBySlug = async (slug) => {
+  const liveSession = await LiveSession.findBySlug(slug);
+  if (!liveSession) throw new Error("liveSession not found.");
+  return liveSession;
+};
+
 module.exports = {
   createLiveSession,
   getAllLiveSessions,
@@ -619,4 +625,5 @@ module.exports = {
   sendMeetingLink,
   getSuggestedSessions,
   sendSessionNotification,
+  getLiveSessionBySlug,
 };

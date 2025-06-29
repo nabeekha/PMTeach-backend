@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
-
+const slugify = require("../../utils/slugify");
 const liveSessionSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
+    slug: { type: String, unique: true },
     date: {
       type: Date,
       required: function () {
@@ -50,6 +51,10 @@ const liveSessionSchema = new mongoose.Schema(
 );
 
 liveSessionSchema.pre("save", function (next) {
+  if (this.isModified("title") || !this.slug) {
+    this.slug = slugify(this.title);
+  }
+
   if (this.startTime && this.endTime && this.sessionType === "live") {
     const [startHours, startMinutes] = this.startTime.split(":").map(Number);
     const [endHours, endMinutes] = this.endTime.split(":").map(Number);
@@ -64,5 +69,9 @@ liveSessionSchema.pre("save", function (next) {
   }
   next();
 });
+
+liveSessionSchema.statics.findBySlug = async function (slug) {
+  return this.findOne({ slug });
+};
 
 module.exports = mongoose.model("liveSession", liveSessionSchema);

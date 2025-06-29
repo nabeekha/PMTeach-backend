@@ -164,6 +164,32 @@ const sendUserNotifications = async (req, res, next) => {
   }
 };
 
+const getLiveSessionBySlug = async (req, res, next) => {
+  try {
+    const liveSession = await liveSessionService.getLiveSessionBySlug(
+      req.params.slug
+    );
+    if (!liveSession) {
+      return res
+        .status(404)
+        .json({ success: false, message: "liveSession not found" });
+    }
+    const suggestedSessions = await liveSessionService.getSuggestedSessions(
+      liveSession._id
+    );
+    res.status(200).json({
+      success: true,
+      message: "liveSession retrieved successfully",
+      data: {
+        session: liveSession,
+        suggestions: suggestedSessions,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createLiveSession,
   getAllLiveSessions,
@@ -172,4 +198,5 @@ module.exports = {
   deleteLiveSession,
   registerUserForSession,
   sendUserNotifications,
+  getLiveSessionBySlug,
 };
