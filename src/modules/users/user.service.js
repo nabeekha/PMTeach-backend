@@ -7,13 +7,20 @@ const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
 // Register a new user
-const register = async ({ name, email, password, loginType }) => {
+const register = async ({
+  firstName,
+  lastName,
+  email,
+  password,
+  loginType,
+}) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) throw new Error("Email already exists.");
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const newUser = new User({
-    name,
+    firstName,
+    lastName,
     email,
     password: hashedPassword,
     loginType: loginType,
@@ -32,13 +39,8 @@ const login = async ({ email, password, loginType }) => {
   if (!isMatch) throw new Error("Invalid credentials.");
 
   const token = jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-      loginType,
-      isOnboarded: user.isOnboarded,
-      isVerified: user.isVerified,
-    },
+    (({ _id, password, ...rest } = user.toObject()),
+    { id: _id.toString(), ...rest }),
     process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
@@ -61,13 +63,8 @@ const createOrRetrieveUser = async ({ email, name, loginType }) => {
   let user = await User.findOne({ email });
   if (user) {
     const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-        loginType,
-        isOnboarded: user.isOnboarded,
-        isVerified: user.isVerified,
-      },
+      (({ _id, password, ...rest } = user.toObject()),
+      { id: _id.toString(), ...rest }),
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -82,13 +79,8 @@ const createOrRetrieveUser = async ({ email, name, loginType }) => {
   const newUser = await user.save();
   if (newUser) {
     const token = jwt.sign(
-      {
-        id: newUser._id,
-        role: newUser.role,
-        loginType,
-        isOnboarded: user.isOnboarded,
-        isVerified: user.isVerified,
-      },
+      (({ _id, password, ...rest } = newUser.toObject()),
+      { id: _id.toString(), ...rest }),
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -158,6 +150,29 @@ const resetPassword = async (email, otp, newPassword) => {
   return true;
 };
 
+async function getUserMembership(userId) {
+  return await User.findById(userId).select(
+    "membership membership_start_date membership_end_date"
+  );
+}
+
+// Check if user's membership is valid
+async function checkMembershipStatus(userId) {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  if (user.membership === "free") return { valid: false };
+
+  const now = new Date();
+  const valid = user.membership_end_date > now;
+
+  return {
+    valid,
+    membership: user.membership,
+    expires: user.membership_end_date,
+  };
+}
+
 module.exports = {
   register,
   login,
@@ -170,4 +185,6 @@ module.exports = {
   verifyOtp,
   forgotPassword,
   resetPassword,
+  getUserMembership,
+  checkMembershipStatus,
 };

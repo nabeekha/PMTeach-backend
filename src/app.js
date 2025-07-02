@@ -10,7 +10,6 @@ const sectionRoutes = require("./modules/sections/section.routes");
 const videoRoutes = require("./modules/videos/video.routes");
 const paymentRoutes = require("./common/routes/payment.routes");
 const paymentHistoryRoutes = require("./modules/payment-histories/paymentHistory.routes");
-const stripeWebhookRoutes = require("./common/routes/stripeWebhook.routes");
 const careerGoalRoutes = require("./modules/career-goals/careerGoal.routes");
 const onboardingRoutes = require("./modules/onboardings/onboarding.routes");
 const adminDashboardRoute = require("./common/routes/adminDashboard.routes");
@@ -27,7 +26,15 @@ const questionBankRoutes = require("./modules/question-bank/questionBank.route")
 const blogRoutes = require("./modules/blog/blog.routes");
 
 const app = express();
-
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.url}`);
+  next();
+});
+app.post(
+  "/api/payments/webhook",
+  express.raw({ type: "application/json" }),
+  require("./common/controllers/payment.controller").handleStripeWebhook
+);
 // Session configuration
 app.use(
   session({
@@ -56,7 +63,6 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/payment-history", paymentHistoryRoutes);
-app.use("/api/stripe", stripeWebhookRoutes);
 app.use("/api/career-goals", careerGoalRoutes);
 app.use("/api/onboarding", onboardingRoutes);
 app.use("/api/admin-dashboard", adminDashboardRoute);

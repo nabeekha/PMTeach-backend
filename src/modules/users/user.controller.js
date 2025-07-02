@@ -241,13 +241,8 @@ const verifyOtp = async (req, res, next) => {
     }
 
     const token = jwt.sign(
-      {
-        id: updatedUser._id,
-        role: updatedUser.role,
-        loginType: updatedUser.loginType,
-        isOnboarded: updatedUser.isOnboarded,
-        isVerified: updatedUser.isVerified,
-      },
+      (({ _id, password, ...rest } = updatedUser.toObject()),
+      { id: _id.toString(), ...rest }),
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
