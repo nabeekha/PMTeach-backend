@@ -1,2 +1,2 @@
-# PMTeach-backend
-Backend repository for PMTeach website
+# nayru-backend
+Backend repository for Nayru website

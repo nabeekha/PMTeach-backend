@@ -11,6 +11,8 @@ const {
   getOtpEmailTemplate,
   getPasswordResetTemplate,
 } = require("../../common/templates/emailTemplates");
+const bcrypt = require("bcryptjs");
+
 // Register a new user
 const register = async (req, res, next) => {
   const { error } = validateUser(req.body);
@@ -46,7 +48,7 @@ const login = async (req, res, next) => {
     if (!user.isVerified) {
       const { otp } = await userService.sendOtp(email);
       const mailData = {
-        from: `Pm Teach <no-reply@${DOMAIN}>`,
+        from: `Nayru <no-reply@${DOMAIN}>`,
         to: email,
         subject: "Email Verification OTP",
         html: getOtpEmailTemplate(otp),
@@ -186,7 +188,7 @@ const sendOtp = async (email) => {
     const { otp } = await userService.sendOtp(email);
 
     const mailData = {
-      from: `Pm Teach <no-reply@${DOMAIN}>`,
+      from: `Nayru <no-reply@${DOMAIN}>`,
       to: email,
       subject: "Your OTP Code",
       html: getOtpEmailTemplate(otp),
@@ -265,7 +267,7 @@ const forgotPassword = async (req, res, next) => {
     const { user, otp } = await userService.forgotPassword(email);
 
     const mailData = {
-      from: `Pm Teach <no-reply@${DOMAIN}>`,
+      from: `Nayru <no-reply@${DOMAIN}>`,
       to: email,
       subject: "Reset Password OTP",
       html: getPasswordResetTemplate(otp),
@@ -306,7 +308,7 @@ const resendOtp = async (req, res, next) => {
     const { otp } = await userService.sendOtp(email);
 
     const mailData = {
-      from: `Pm Teach <no-reply@${DOMAIN}>`,
+      from: `Nayru <no-reply@${DOMAIN}>`,
       to: email,
       subject: "Your OTP Code",
       html: getOtpEmailTemplate(otp),
@@ -316,6 +318,35 @@ const resendOtp = async (req, res, next) => {
     mg.messages().send(mailData, (error, body) => {
       if (error) return next(error);
       res.status(200).json({ success: true, message: "OTP sent to email" });
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Change Password
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
     });
   } catch (err) {
     next(err);
@@ -334,4 +365,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   resendOtp,
+  changePassword,
 };

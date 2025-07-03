@@ -155,7 +155,7 @@ const sendMeetingLink = async (email, session, suggestedSessionIds = []) => {
       : "";
 
   const data = {
-    from: "PM Teach <no-reply@pmteach.com>",
+    from: "Nayru <no-reply@nayru.com>",
     to: email,
     subject: `You're Registered for ${session?.title}`,
     html: `
@@ -172,7 +172,7 @@ const sendMeetingLink = async (email, session, suggestedSessionIds = []) => {
         <!-- Header -->
         <tr>
           <td style="padding: 30px 20px; text-align: center; background-color: #ffffff;">
-            <img src="https://www.pmteach.com/photos/pmteach-full.png" alt="PM Teach Logo" style="max-width: 180px;">
+            <img src="https://www.nayru.com/photos/png/nayru-logo.png" alt="Nayru Logo" style="max-width: 180px;">
           </td>
         </tr>
         
@@ -332,8 +332,8 @@ const sendMeetingLink = async (email, session, suggestedSessionIds = []) => {
         <tr>
           <td style="padding: 30px 20px; text-align: center; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0 0 10px; font-size: 14px; color: #718096;">Thank you for joining us!</p>
-            <p style="margin: 0; font-size: 16px; font-weight: 600; color: #2d3748;">PM Teach Team</p>
-            <p style="margin: 20px 0 0; font-size: 12px; color: #a0aec0;">© ${new Date().getFullYear()} PM Teach. All rights reserved.</p>
+            <p style="margin: 0; font-size: 16px; font-weight: 600; color: #2d3748;">Nayru Team</p>
+            <p style="margin: 20px 0 0; font-size: 12px; color: #a0aec0;">© ${new Date().getFullYear()} Nayru. All rights reserved.</p>
           </td>
         </tr>
       </table>
@@ -401,7 +401,7 @@ const sendSessionNotification = async (sessionIds) => {
         <!-- Header -->
         <tr>
           <td style="padding: 30px 20px; text-align: center; background-color: #ffffff;">
-            <img src="https://www.pmteach.com/photos/pmteach-full.png" alt="Logo" style="max-width: 180px;">
+            <img src="https://www.nayru.com/photos/png/nayru-logo.png" alt="Logo" style="max-width: 180px;">
           </td>
         </tr>
         
@@ -457,7 +457,7 @@ const sendSessionNotification = async (sessionIds) => {
         <!-- Footer -->
         <tr>
           <td style="padding: 20px; text-align: center; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
-            <p style="margin: 0; color: #718096; font-size: 14px;">© ${new Date().getFullYear()} PM Teach. All rights reserved.</p>
+            <p style="margin: 0; color: #718096; font-size: 14px;">© ${new Date().getFullYear()} Nayru. All rights reserved.</p>
           </td>
         </tr>
       </table>
@@ -479,7 +479,7 @@ const sendSessionNotification = async (sessionIds) => {
         <!-- Header -->
         <tr>
           <td style="padding: 30px 20px; text-align: center; background-color: #ffffff;">
-            <img src="https://www.pmteach.com/photos/pmteach-full.png" alt="Logo" style="max-width: 180px;">
+            <img src="https://www.nayru.com/photos/png/nayru-logo.png" alt="Logo" style="max-width: 180px;">
           </td>
         </tr>
         
@@ -542,7 +542,7 @@ const sendSessionNotification = async (sessionIds) => {
         <!-- Footer -->
         <tr>
           <td style="padding: 20px; text-align: center; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
-            <p style="margin: 0; color: #718096; font-size: 14px;">© ${new Date().getFullYear()} PM Teach. All rights reserved.</p>
+            <p style="margin: 0; color: #718096; font-size: 14px;">© ${new Date().getFullYear()} Nayru. All rights reserved.</p>
           </td>
         </tr>
       </table>
@@ -567,7 +567,7 @@ const sendSessionNotification = async (sessionIds) => {
   // Send emails to all users
   const emailPromises = allUsers.map((user) => {
     const data = {
-      from: "PM Teach <notifications@pmteach.com>",
+      from: "Nayru <notifications@nayru.com>",
       to: user.email,
       subject: subject,
       html: htmlContent,

@@ -40,7 +40,11 @@ exports.createCheckoutSession = async (req, res) => {
       plan,
       billingInterval
     );
-    res.status(200).json({ url: session.url });
+    res.status(200).json({
+      url: session.url,
+      success: true,
+      message: "Payment initiated successfully",
+    });
   } catch (err) {
     console.error("Payment error:", err);
     res.status(500).json({ message: err.message });

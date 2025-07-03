@@ -1,7 +1,7 @@
 {
-  "name": "pmteach-backend",
+  "name": "nayru-backend",
   "version": "1.0.0",
-  "description": "Backend repository for PMTeach website",
+  "description": "Backend repository for Nayru website",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

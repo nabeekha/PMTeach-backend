@@ -11,6 +11,7 @@ const {
   verifyOtp,
   forgotPassword,
   resetPassword,
+  changePassword,
 } = require("../users/user.controller");
 const {
   authMiddleware,
@@ -51,5 +52,8 @@ router.post("/forgot-password", forgotPassword);
 
 // reset password
 router.post("/reset-password", resetPassword);
+
+// Change password
+router.post("/change-password", authMiddleware, changePassword);
 
 module.exports = router;

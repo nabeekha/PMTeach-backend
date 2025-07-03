@@ -86,7 +86,7 @@ async function createCheckoutSession(user, plan, billingInterval) {
       },
     },
     success_url: `${process.env.NEXT_PUBLIC_AUTHENTICATED_SUCCESS_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_UNAUTHENTICATED_SUCCESS_URL}/cancel`,
+    cancel_url: `${process.env.NEXT_PUBLIC_UNAUTHENTICATED_SUCCESS_URL}/failed`,
   });
 }
 

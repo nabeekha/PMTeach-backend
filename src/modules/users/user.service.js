@@ -176,6 +176,23 @@ async function checkMembershipStatus(userId) {
   };
 }
 
+// Change Password
+const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  // Verify current password
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  if (!isMatch) throw new Error("Current password is incorrect");
+
+  // Update to new password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  user.password = hashedPassword;
+  await user.save();
+
+  return true;
+};
+
 module.exports = {
   register,
   login,
@@ -190,4 +207,5 @@ module.exports = {
   resetPassword,
   getUserMembership,
   checkMembershipStatus,
+  changePassword,
 };

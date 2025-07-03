@@ -76,7 +76,7 @@ const getOtpEmailTemplate = (otp) => {
     <body>
       <div class="container">
         <div class="header">
-          <a href="#" class="logo">Pm Teach</a>
+          <a href="#" class="logo">Nayru</a>
         </div>
         
         <div class="content">
@@ -90,11 +90,11 @@ const getOtpEmailTemplate = (otp) => {
           
           <p>If you didn't request this, please ignore this email or contact support if you have questions.</p>
           
-          <p>Best regards,<br>The Pm Teach Team</p>
+          <p>Best regards,<br>The Nayru Team</p>
         </div>
         
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} Pm Teach. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} Nayru. All rights reserved.</p>
           <p>If you're having trouble with the button above, copy and paste the OTP code manually.</p>
         </div>
       </div>
@@ -184,7 +184,7 @@ const getPasswordResetTemplate = (otp) => {
     <body>
       <div class="container">
         <div class="header">
-          <a href="#" class="logo">Pm Teach</a>
+          <a href="#" class="logo">Nayru</a>
         </div>
         
         <div class="content">
@@ -198,11 +198,11 @@ const getPasswordResetTemplate = (otp) => {
           
           <p class="warning">If you didn't request a password reset, please secure your account immediately.</p>
           
-          <p>Best regards,<br>The Pm Teach Team</p>
+          <p>Best regards,<br>The Nayru Team</p>
         </div>
         
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} Pm Teach. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} Nayru. All rights reserved.</p>
           <p>This is an automated message, please do not reply directly to this email.</p>
         </div>
       </div>
