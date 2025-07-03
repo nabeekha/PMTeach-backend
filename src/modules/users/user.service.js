@@ -45,7 +45,7 @@ const login = async ({ email, password, loginType }) => {
     { expiresIn: "1d" }
   );
 
-  return { token, user };
+  return { token, user: (({ password, ...rest }) => rest)(user.toObject()) };
 };
 
 // Get all users
@@ -68,7 +68,7 @@ const createOrRetrieveUser = async ({ email, name, loginType }) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    return { token, user };
+    return { token, user: (({ password, ...rest }) => rest)(user.toObject()) };
   }
   user = new User({
     email,
@@ -84,7 +84,10 @@ const createOrRetrieveUser = async ({ email, name, loginType }) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    return { token, user: newUser };
+    return {
+      token,
+      user: (({ password, ...rest }) => rest)(newUser.toObject()),
+    };
   }
 };
 

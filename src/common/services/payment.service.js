@@ -47,9 +47,6 @@ async function cancelActiveSubscription(subscriptionId) {
 
 // Create checkout session with proper validation
 async function createCheckoutSession(user, plan, billingInterval) {
-  console.log("billingInterval::: ", billingInterval);
-  console.log("plan::: ", plan);
-  console.log("user::: ", user);
   let customerId = user.stripeCustomerId;
 
   if (!customerId) {

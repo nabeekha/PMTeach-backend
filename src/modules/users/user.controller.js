@@ -195,7 +195,7 @@ const sendOtp = async (email) => {
 
     mg.messages().send(mailData);
   } catch (err) {
-    // console.log("err::: ", err);
+    console.log("err ", err);
   }
 };
 
@@ -251,7 +251,7 @@ const verifyOtp = async (req, res, next) => {
       success: true,
       message: "OTP verified successfully",
       token,
-      user: updatedUser,
+      user: (({ password, ...rest }) => rest)(updatedUser.toObject()),
     });
   } catch (err) {
     next(err);

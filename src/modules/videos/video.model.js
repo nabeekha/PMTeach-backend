@@ -12,6 +12,7 @@ const videoSchema = new mongoose.Schema(
         url: { type: String },
       },
     ],
+    isLocked: { type: Boolean, default: true },
   },
 
   { timestamps: true }

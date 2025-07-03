@@ -10,7 +10,6 @@ const {
 exports.createCheckoutSession = async (req, res) => {
   try {
     const { plan, billingInterval } = req.body;
-    console.log("billingInterval::: ", billingInterval);
     const user = req.user;
 
     if (!["base", "premium"].includes(plan)) {
